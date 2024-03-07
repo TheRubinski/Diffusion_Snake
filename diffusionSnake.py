@@ -1,12 +1,17 @@
 # Diffusion Snakes for image Segmentation from Creemers 2002 (PHD-Thesis)
 
 
-# TODO: Next: find u-function
+# TODO: Next: find u-function .. see p.14 2.1 and/or p.64 and/ or slides acp-03a
+def u_func_full(image, mask):
+    # blur only mask part it
+    return image
 
+def u_func_simple(image, mask):
+    # take average of mask part
+    return image
 
 # Diffusion Snake
 # Minimizing the full Munford-Shah Functional 2.11 on p.19 by performing a gradient decent step on each step-call
-# TODO: Next
 class DiffusionSnake:    
     def __init__(self, image, contour):
         self.I = image
@@ -19,6 +24,8 @@ class DiffusionSnake:
     def step(self):
         # 1. Curve Step = Euler-Lagrange equation 2.25
         # 2. u-Step
+
+        # see p.6 for spline def, he used
         return self.I, self.C, self.u
 
     
@@ -39,6 +46,8 @@ class SimplifiedDiffusionSnake:
     def step(self):
         # 1. Curve Step = Euler-Lagrange equation 2.25
         # 2. u-Step
+
+        # see p.6 for spline def, he used
         return self.I, self.C, self.u
 
 

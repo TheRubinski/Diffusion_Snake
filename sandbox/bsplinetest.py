@@ -7,8 +7,9 @@ from matplotlib import animation
 def drawspline(spline,canvas=None,steps=1000):
     if canvas is None:
         canvas = np.zeros((100, 100), bool)
-    xi, yi = interpolate.splev(np.linspace(0, 1, steps), spline)
-    rr, cc = polygon(xi,yi, canvas.shape)
+    xi,yi = spline(np.linspace(0, 1, steps)).T
+
+    rr, cc = polygon(xi[:-1],yi[:-1], canvas.shape)
     #canvas[rr,cc] = 1
     canvas[cc,rr] = 1
     return canvas,xi,yi
@@ -17,7 +18,8 @@ def drawspline(spline,canvas=None,steps=1000):
 def makespline(points):
     #points=np.array(points)
     points=np.vstack((points,(points[0],)))
-    spline, u = interpolate.splprep(points.T, s=0, per=True)
+    spline = interpolate.make_interp_spline(np.linspace(0, 1, points.shape[0]),points, k=3,bc_type="periodic")
+    
     return spline
 
 
@@ -46,20 +48,18 @@ def animate(f):
     x,y=np.array(points).T
     pointsplt.set_data(x, y)
     
-    try:
-        spline=makespline(points.astype(int))#here are somtimes exceptions if points are to close or something
-        img,xi,yi=drawspline(spline,steps=100000)
     
-        splineplt.set_data(xi, yi)
-        imgplt.set_array(img)
-    except:
-        print(f"cant render frame {f}")
-        print(points)
-        #[[72.3394304  76.3429846 ]
-        # [50.52473444 27.2649546 ]
-        # [50.99123604 27.93682006]
-        # [81.459163   57.33716789]
-        # [54.21997677 24.46773367]]
+    spline=makespline(points.astype(int))#here are somtimes exceptions if points are to close or something
+    img,xi,yi=drawspline(spline,steps=1000)
+
+    splineplt.set_data(xi, yi)
+    imgplt.set_array(img)
+
+    #[[72.3394304  76.3429846 ]
+    # [50.52473444 27.2649546 ]
+    # [50.99123604 27.93682006]
+    # [81.459163   57.33716789]
+    # [54.21997677 24.46773367]]
 
     return [imgplt,pointsplt,splineplt]
 

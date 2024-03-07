@@ -22,6 +22,7 @@ def makespline(points):
 
 
 
+
 pointnum=5
 points= np.random.uniform(10,90, size=(pointnum,2))
 pointssoll=np.copy(points)

@@ -20,22 +20,11 @@ def makespline(points):
     spline, u = interpolate.splprep(points.T, s=0, per=True)
     return spline
 
-# x,y=zip(*[(1,1),(0,0),(1,0),(0,1)])
-# x=list(x)
-# y=list(y)
-# x.append(x[0])
-# y.append(y[0])
-# x=np.array(x)*50+25
-# y=np.array(y)*50+25
 
-# print(list(zip(x,y)))
 
 pointnum=5
-
 points= np.random.uniform(10,90, size=(pointnum,2))
 pointssoll=np.copy(points)
-
-fig = plt.figure()
 
 pointsplt,=plt.plot([],[], 'or')#plot points
 splineplt,=plt.plot([], [], '-b')#plot spline
@@ -71,12 +60,8 @@ def animate(f):
         # [81.459163   57.33716789]
         # [54.21997677 24.46773367]]
 
-
-
-
-
     return [imgplt,pointsplt,splineplt]
 
  
-anim = animation.FuncAnimation(fig, animate, interval=10,cache_frame_data=False)
+anim = animation.FuncAnimation(plt.gcf(), animate, interval=10,cache_frame_data=False)
 plt.show()

@@ -8,6 +8,31 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 from bsplineclass import Spline
 from math import sqrt
+
+
+
+
+
+# original_array = np.array([[1, 2, 3],
+#                           [4, 5, 6],
+#                           [7, 8, 9]])
+
+# padding_size = 1
+# padded_array = np.pad(original_array, pad_width=padding_size, mode='constant', constant_values=0)
+
+
+# print(padded_array)
+# smid=slice(1,-1)
+# sup=slice(2,None)
+# sdown=slice(None,-2)
+# neighbourslices=[(sup,smid),(sdown,smid),(smid,sup),(smid,sdown)]
+# for j in neighbourslices:
+#     print(padded_array[j])
+
+
+
+
+
 x = requests.get('https://upload.wikimedia.org/wikipedia/commons/f/fa/Grayscale_8bits_palette_sample_image.png')
 
 stream = io.BytesIO(x.content)
@@ -31,34 +56,26 @@ w=mask!=1
 max_row, max_col = f.shape
 t=1/4
 l=10
-def N(position):
-    row, col = position
-    neighbors = []
-    if row > 0:neighbors.append((row - 1, col))  # Top neighbor
-    if row < max_row - 1:neighbors.append((row + 1, col))  # Bottom neighbor
-    if col > 0:neighbors.append((row, col - 1))  # Left neighbor
-    if col < max_col - 1:neighbors.append((row, col + 1))  # Right neighbor
-    return neighbors
+
 
 fig=plt.figure()
 imgplt=plt.imshow(f)
 
+pw = np.pad(w, pad_width=1, mode='constant', constant_values=0)
 
+smid=slice(1,-1)
+sup=slice(2,None)
+sdown=slice(None,-2)
+neighbourslices=[(sup,smid),(sdown,smid),(smid,sup),(smid,sdown)]
 
 def animate(frame):
     global uk
-    ukn=np.zeros(f.shape,np.float64)
 
-    for i in range(max_row):
-        for j in range(max_col):
-            pos=i,j
-            neighbours=N(pos)
-            ukn[pos]=((1-t*sum(sqrt(w[pos]*w[npos])for npos in neighbours))*uk[pos]
-                    +t*sum(sqrt(w[pos]*w[npos])*uk[npos]for npos in neighbours)
-                    )
+    puk = np.pad(uk, pad_width=1, mode='constant', constant_values=0)
 
-    ukn+=t/l**2*f
-    ukn/=(1+t/l**2)
+    ukn=((1-t*sum(np.sqrt(w*pw[j])for j in neighbourslices))*uk
+        +t*sum(np.sqrt(w*pw[j])*puk[j]for j in neighbourslices)
+        +t/l**2*f)/(1+t/l**2)
 
     uk=ukn
     imgplt.set_array(uk)

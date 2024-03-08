@@ -3,28 +3,20 @@
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.interpolate import make_interp_spline
+
 
 
 def overlay(image, contour):
     return image
 
 
-def circle_spline(n_nodes=100, degree=2, scale=2):
-    """
-    degree: of spline, so 2 is quadratic, 3 is qubic
-    scale: of cicle in radius
-    """
-    theta = 2 * np.pi * np.linspace(0, 1, n_nodes)
-    y = np.c_[np.cos(theta), np.sin(theta)]         # y are the input datapoints. Here = def cycle
-    cs = make_interp_spline(theta, y, k=degree)
-    cs.c = scale *cs.c
-    return cs 
+
 
 
 def get_masks(spline, image):
     # TODO Ruben
-    return in_mask, out_mask, conture_mask
+    xi, yi = interpolate.splev(np.linspace(0, 1, steps), spline)
+    return #in_mask, out_mask, conture_mask
 
 
 # Load image file
@@ -35,26 +27,29 @@ def get_masks(spline, image):
 #   im = cv.imread(os.path.join(path, f))
 #   im = np.asarray(im)
 
-# load single image for test-purpose
-im = cv.imread(".\sample_images\circle.png")
-im = np.asarray(im)
-plt.imshow(im)
-plt.show()
 
 
-# generate spline-curve aka C
+# make spline-curve aka C
 scale = 5
 n_nodes = 10
 cs = circle_spline(n_nodes=n_nodes, degree=2, scale=1)       # XXX use quadratic B-spline curves (? 2.23, p.24 )
 cs.c = scale * cs.c                                          # XXX You can simply scale the spline by scaling cs.c XXX this is approx the same as scale * y befor generating spline
 
 
-# TODO Ruben: Move spline to image
+# TODO Ruben: Put spline on image
+# load single image for test-purpose
+im = cv.imread(".\sample_images\circle.png")
+im = np.asarray(im)
+plt.imshow(im)
+plt.show()
+
+# Plot spline as image
+
+
 # Plot spline
 theta = 2 * np.pi * np.linspace(0, 1, n_nodes)
 y = np.c_[np.cos(theta), np.sin(theta)]         # y are the input datapoints. Here = def cycle
 
-# Plot
 xs = 2 * np.pi * np.linspace(0, 1, 100)         # get (x,y) values from spline curve for plotting
 fig, ax = plt.subplots(figsize=(6.5, 4))
 ax.plot(y[:, 0], y[:, 1], 'o', label='data')

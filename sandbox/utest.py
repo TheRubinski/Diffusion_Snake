@@ -42,9 +42,12 @@ def N(position):
 
 fig=plt.figure()
 imgplt=plt.imshow(f)
+
+
+
 def animate(frame):
     global uk
-    ukn=np.zeros(f.shape,np.uint8)
+    ukn=np.zeros(f.shape,np.float64)
 
     for i in range(max_row):
         for j in range(max_col):
@@ -52,8 +55,11 @@ def animate(frame):
             neighbours=N(pos)
             ukn[pos]=((1-t*sum(sqrt(w[pos]*w[npos])for npos in neighbours))*uk[pos]
                     +t*sum(sqrt(w[pos]*w[npos])*uk[npos]for npos in neighbours)
-                    +t/l**2*f[pos]
-                    )/(1+t/l**2)
+                    )
+
+    ukn+=t/l**2*f
+    ukn/=(1+t/l**2)
+
     uk=ukn
     imgplt.set_array(uk)
     print(frame)

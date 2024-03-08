@@ -52,6 +52,7 @@ plt.imshow(mask, interpolation='nearest')
 plt.show()
 
 uk=np.copy(f)
+#uk=np.zeros(f.shape,np.uint8)
 w=mask!=1
 max_row, max_col = f.shape
 t=1/4
@@ -61,7 +62,7 @@ l=10
 fig=plt.figure()
 imgplt=plt.imshow(f)
 
-pw = np.pad(w, pad_width=1, mode='constant', constant_values=0)
+pw = np.pad(w, pad_width=1, constant_values=0)
 
 smid=slice(1,-1)
 sup=slice(2,None)
@@ -70,16 +71,18 @@ neighbourslices=[(sup,smid),(sdown,smid),(smid,sup),(smid,sdown)]
 
 def animate(frame):
     global uk
+    for i in range(50):
+        puk = np.pad(uk, pad_width=1, constant_values=0)#padded uk
 
-    puk = np.pad(uk, pad_width=1, mode='constant', constant_values=0)
+        uk=(
+            (1-t*sum(np.sqrt(w*pw[j])for j in neighbourslices))*uk
+            +t*sum(np.sqrt(w*pw[j])*puk[j]for j in neighbourslices)#u_k=u_(k+1)
+            +t/l**2*f
+            )/(1+t/l**2)
 
-    ukn=((1-t*sum(np.sqrt(w*pw[j])for j in neighbourslices))*uk
-        +t*sum(np.sqrt(w*pw[j])*puk[j]for j in neighbourslices)
-        +t/l**2*f)/(1+t/l**2)
 
-    uk=ukn
     imgplt.set_array(uk)
-    print(frame)
+    print(frame*50)
     return [imgplt]
 anim = animation.FuncAnimation(fig, animate, interval=10,cache_frame_data=False,blit=True)
 plt.show()

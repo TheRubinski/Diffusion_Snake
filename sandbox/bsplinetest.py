@@ -25,7 +25,19 @@ def makespline(points):
     
     return spline
 
-
+def polygon_direction(points):
+    direction_sum = 0
+    num_points = len(points)
+    for i in range(num_points):
+        x1, y1 = points[i]
+        x2, y2 = points[(i + 1) % num_points]  # Wrap around to the first point for the last edge
+        direction_sum += (x2 - x1) * (y2 + y1)
+    if direction_sum > 0:
+        return 1#"Clockwise"
+    elif direction_sum < 0:
+        return -1#"Counter-Clockwise"
+    else:
+        return 0#"Collinear"
 
 
 pointnum=4
@@ -67,9 +79,9 @@ def animate(f):
 
     #ps=spline(np.linspace(0,1,len(points),endpoint=False))
     dx,dy=spline(np.linspace(0,1,len(points),endpoint=False),1).T
-
+    r=polygon_direction(points)
     normalplt.set_offsets(points)
-    normalplt.set_UVC(-dy,dx)
+    normalplt.set_UVC(-dy*r,dx*r)
 
 
 

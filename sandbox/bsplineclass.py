@@ -26,15 +26,15 @@ class Spline:
         else:
             return 0#"Collinear"
 
-    def draws(self,canvas=None,steps=1000):
+    def draw(self,canvas=None,steps=1000,drawinside=True):
         if canvas is None:
             canvas = np.zeros((100, 100), int)
         xi,yi = self.spline(np.linspace(0, 1, steps)).T
 
         px,py=xi[:-1],yi[:-1]
-        rr, cc = polygon(px,py, canvas.shape)
-        #canvas[rr,cc] = 1
-        canvas[cc,rr] = 2
+        if drawinside:
+            rr, cc = polygon(px,py, canvas.shape)
+            canvas[cc,rr] = 2
         rr, cc = polygon_perimeter(px,py, canvas.shape)
         canvas[cc,rr] = 1
         return canvas,xi,yi

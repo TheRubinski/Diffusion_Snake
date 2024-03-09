@@ -69,6 +69,7 @@ sup=slice(2,None)
 sdown=slice(None,-2)
 neighbourslices=[(sup,smid),(sdown,smid),(smid,sup),(smid,sdown)]
 
+
 def animate(frame):
     global uk
     for i in range(50):
@@ -86,3 +87,4 @@ def animate(frame):
     return [imgplt]
 anim = animation.FuncAnimation(fig, animate, interval=10,cache_frame_data=False,blit=True)
 plt.show()
+

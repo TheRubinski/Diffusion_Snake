@@ -48,7 +48,7 @@ def animate(f):
     
     try:
         spline=makespline(points.astype(int))#here are somtimes exceptions if points are to close or something
-        img,xi,yi=drawspline(spline,steps=100000)
+        img,xi,yi=drawspline(spline,steps=1000)
     
         splineplt.set_data(xi, yi)
         imgplt.set_array(img)

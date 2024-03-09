@@ -77,7 +77,7 @@ if __name__=="__main__":
         
         
         spline=Spline(points)
-        img,xi,yi=spline.draws(steps=1000)
+        img,xi,yi=spline.draw(steps=1000)
 
         splineplt.set_data(xi, yi)
         imgplt.set_array(img)

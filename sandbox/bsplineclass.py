@@ -7,7 +7,7 @@ class Spline:
     def __init__(self, points):
         self.setpoints(points)
     
-    def setpoints(self,points):
+    def setpoints(self, points):
         self.points=np.array(points)
         closedpoints=np.vstack((self.points,(self.points[0],)))
         self.spline = interpolate.make_interp_spline(np.linspace(0, 1, closedpoints.shape[0]),closedpoints, k=3,bc_type="periodic")
@@ -38,6 +38,23 @@ class Spline:
         rr, cc = polygon_perimeter(px,py, canvas.shape)
         canvas[cc,rr] = 1
         return canvas,xi,yi
+    
+    def get_masks(self,canvas=None,steps=1000):
+        if canvas is None:
+            in_mask = np.zeros((100, 100), int)
+        else:
+            in_mask = np.zeros((canvas.shape), int)
+        spline_mask = np.copy(in_mask)
+
+        xi,yi = self.spline(np.linspace(0, 1, steps)).T
+        px,py=xi[:-1],yi[:-1]
+        rr, cc = polygon(px,py, in_mask.shape)               # in + some from spline
+        in_mask[cc,rr] = 1
+        rr, cc = polygon_perimeter(px,py, in_mask.shape)     # only spline curve
+        spline_mask[cc,rr] = 1
+        in_mask = np.logical_and(in_mask, np.logical_not(spline_mask))  # remove elements also in spline 
+        out_mask = np.logical_not(np.logical_and(in_mask, spline_mask))
+        return in_mask, out_mask, spline_mask
     
     def normals(self):
         dx,dy=self.spline(np.linspace(0,1,len(points),endpoint=False),1).T

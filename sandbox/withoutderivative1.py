@@ -68,7 +68,8 @@ u=f
 
 
 size=np.array(f.shape)
-C=Spline((generate_points_in_circle(20)*size/3+size/2))
+n_points = 20 #100 got also stuck # XXX was 20, a lot faster, but got stuck at snail-gap
+C=Spline((generate_points_in_circle(n_points)*size/3+size/2)) 
 
 mask,x,y=C.draw(np.zeros(f.shape,np.uint8))
 
@@ -84,8 +85,12 @@ uplt=plt.imshow(u)
 Cplt,=plt.plot(x,y,"-b")
 u=uiter(f,C,u,lambd,iterations=100)
 delta_w_neu=0
+step=0
+print_step = plt.text(1,5,"Step: "+str(step))
 def animate(frame):
-    global u,delta_w_neu,C
+    global u,delta_w_neu,C,step, print_step
+    
+    print_step.set_text("Step: "+str(step)) # = plt.text(1,5,"Step: "+str(step))
 
     u=uiter(f,C,u,lambd,iterations=4)
     e=error(f,u,C,lambd,v)
@@ -145,10 +150,9 @@ def animate(frame):
     mask,x,y=C.draw()
     Cplt.set_data(x,y)
 
+    step += 1
 
-    uplt.set_data(u)
-
-    return[uplt,Cplt]
+    return[uplt,Cplt,print_step]
 plt.pause(0.5)
 anim = animation.FuncAnimation(fig, animate, interval=10,cache_frame_data=False,blit=True)
 plt.show()

@@ -4,13 +4,22 @@ from skimage.draw import polygon,polygon_perimeter
 
 
 class Spline:
-    def __init__(self, points):
+    def __init__(self, points, k=3):
+        self.k = k
         self.setpoints(points)
     
     def setpoints(self, points):
         self.points=np.array(points)
         closedpoints=np.vstack((self.points,(self.points[0],)))
-        self.spline = interpolate.make_interp_spline(np.linspace(0, 1, closedpoints.shape[0]),closedpoints, k=3,bc_type="periodic")
+        self.spline = interpolate.make_interp_spline(np.linspace(0, 1, closedpoints.shape[0]),closedpoints, k=self.k,bc_type="periodic")
+
+    def set_c(self, points):
+        self.spline.c = points
+
+    def designmatrix(self, points):
+        # In each row of the design matrix all the basis elements are evaluated at the certain point (first row - x[0], …, last row - x[-1]).
+        return self.spline.design_matrix(points, self.spline.t, self.k).toarray()
+
     @staticmethod
     def polygon_direction(points):
         direction_sum = 0
@@ -48,7 +57,7 @@ class Spline:
 
         xi,yi = self.spline(np.linspace(0, 1, steps)).T
         px,py=xi[:-1],yi[:-1]
-        rr, cc = polygon(px,py, in_mask.shape)               # in + some from spline
+        rr, cc = polygon(px,py, in_mask.shape)               # in + also some on spline
         in_mask[cc,rr] = 1
         rr, cc = polygon_perimeter(px,py, in_mask.shape)     # only spline curve
         spline_mask[cc,rr] = 1
@@ -56,10 +65,27 @@ class Spline:
         out_mask = np.logical_not(np.logical_and(in_mask, spline_mask))
         return in_mask, out_mask, spline_mask
     
-    def normals(self):
-        dx,dy=self.spline(np.linspace(0,1,len(points),endpoint=False),1).T
-        r=Spline.polygon_direction(points)
+    def get_2masks(self,canvas=None,steps=1000):
+        if canvas is None:
+            in_mask = np.zeros((100, 100), int)
+        else:
+            in_mask = np.zeros((canvas.shape), int)
+
+        xi,yi = self.spline(np.linspace(0, 1, steps)).T
+        px,py=xi[:-1],yi[:-1]
+        rr, cc = polygon(px,py, in_mask.shape)               # in + also some on spline
+        in_mask[cc,rr] = 1
+
+        out_mask = np.logical_not(in_mask)
+        return in_mask, out_mask
+    
+    def normals(self, points=None):
+        if points is None:
+            points = np.linspace(0,1,len(self.points),endpoint=False)
+        dx,dy=self.spline(points,1).T
+        r=Spline.polygon_direction(self.points)
         return -dy*r,dx*r
+    
     
 
 if __name__=="__main__":

@@ -15,7 +15,7 @@ def generate_points_in_circle(num_points):
 
 
 def u_simple(f, spline):
-    in_mask, out_mask, _ = spline.get_masks(np.zeros(f.shape,np.uint8), steps=200)
+    in_mask, out_mask, _ = spline.get_masks(f, steps=200)
     u_in, u_out = in_mask.astype(float), out_mask.astype(float),
     u_in *= np.sum(f*in_mask) / np.sum(in_mask) 
     u_out*= np.sum(f*out_mask)/ np.sum(out_mask)
@@ -23,6 +23,16 @@ def u_simple(f, spline):
     return u, u_in, u_out 
 
 
+def u_e_simple(f, spline):
+    in_mask, out_mask, _ = spline.get_masks(f, steps=200)
+    u_in, u_out = in_mask.astype(float), out_mask.astype(float),
+    u_in *= np.sum(f*in_mask) / np.sum(in_mask) 
+    u_out*= np.sum(f*out_mask)/ np.sum(out_mask)
+    u = u_in + u_out
+    # "energy" outside, inside
+    e_p = np.power(((f*out_mask) - u_out), 2)
+    e_m = np.power(((f*in_mask)  - u_in),  2)
+    return u, u_in, u_out, e_p, e_m
 
 
 
@@ -57,8 +67,9 @@ def animate(frame):
     print_step.set_text("Step: "+str(step))
 
 
-    u,u_in,u_out=u_simple(f,C)
-    e_p, e_m = np.power((f-u_out),2), np.power((f-u_in),2)  # "energy" outside, inside
+    u, u_in, u_out, e_p, e_m = u_e_simple(f,C)
+    # u, u_in, u_out = u_simple(f, C)
+    # e_p, e_m = np.power((f-u_out),2), np.power((f-u_in),2)  # "energy" outside, inside
 
     s = np.linspace(0, 1, s_points,endpoint=False)
     nx, ny=C.normals(s)

@@ -4,21 +4,42 @@ from skimage.draw import polygon,polygon_perimeter
 
 
 class Spline:
-    def __init__(self, points, k=3):
+    def __init__(self, points=None, k=3,*,c=None):
         self.k = k
-        self.setpoints(points)
+        self.points=None
+        self.c=None
+
+        if points is not None and c is not None:
+            raise Exception("provide c or points and not both")
+        if points is not None:
+            self.setpoints(points)
+        if c is not None:
+            self.set_c(c)
     
     def setpoints(self, points):
         self.points=np.array(points)
         closedpoints=np.vstack((self.points,(self.points[0],)))
         self.spline = interpolate.make_interp_spline(np.linspace(0, 1, closedpoints.shape[0]),closedpoints, k=self.k,bc_type="periodic")
 
-    def set_c(self, points):
-        self.spline.c = points
+        self.c=self.spline.c[:-self.k]
+
+    def set_c(self, c):
+        #self.spline.c = c
+        #return
+
+        self.c = c
+        n=len(c)
+        num_knots = n +self.k*2+1
+        # Create a uniform knot vector for an closed curve with domain [0,1]
+        t = np.linspace(-self.k/n, 1+self.k/n, num_knots)
+        c_closed=np.vstack((c,c[:self.k]))
+        self.spline = interpolate.BSpline(t, c_closed,self.k,extrapolate= "periodic")
+
+        self.points = self.spline(np.linspace(0,1,n,endpoint=False))
 
     def designmatrix(self, points):
         # In each row of the design matrix all the basis elements are evaluated at the certain point (first row - x[0], …, last row - x[-1]).
-        return self.spline.design_matrix(points, self.spline.t, self.k).toarray()
+        return self.spline.design_matrix(points, self.spline.t, self.k,extrapolate= "periodic").toarray()
 
     @staticmethod
     def polygon_direction(points):
@@ -126,6 +147,7 @@ if __name__=="__main__":
         imgplt.set_array(img)
 
         x,y=points.T
+        x,y=spline.points.T
         pointsplt.set_data(x, y)
 
         normalplt.set_offsets(points)

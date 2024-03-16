@@ -61,7 +61,7 @@ def error(f,u,C,lambd,v):
 
 
 # Load the image
-image_path = './sample_images/snale1.png'
+image_path = './sample_images/snail1.png'
 image = io.imread(image_path)
 f = color.rgb2gray(image)
 u=f
@@ -69,7 +69,9 @@ u=f
 
 size=np.array(f.shape)
 n_points = 20 #100 got also stuck # XXX was 20, a lot faster, but got stuck at snail-gap
-C=Spline(generate_points_in_circle(n_points,size/3,size/2))
+
+controllpoints=generate_points_in_circle(n_points,size/3,size/2)
+C=Spline(c=controllpoints)
 
 mask,x,y=C.draw(np.zeros(f.shape,np.uint8))
 
@@ -87,8 +89,10 @@ u=uiter(f,C,u,lambd,iterations=100)
 delta_w_neu=0
 step=0
 print_step = plt.text(1,5,"Step: "+str(step))
+
+
 def animate(frame):
-    global u,delta_w_neu,C,step, print_step
+    global u,delta_w_neu,C,step, print_step,controllpoints
     
     print_step.set_text("Step: "+str(step)) # = plt.text(1,5,"Step: "+str(step))
 
@@ -111,27 +115,27 @@ def animate(frame):
         partial_derivative = (f(*args_plus_h) - f(*args_minus_h)) / (2 * h)
         gradients.append(partial_derivative)"""
 
-    h=1
-    gradients=np.zeros(C.points.shape)
-    for index in np.ndindex(C.points.shape):
-        pointsplus =np.copy(C.points)
-        pointsminus=np.copy(C.points)
+    h=2
+    gradients=np.zeros(controllpoints.shape)
+    for index in np.ndindex(controllpoints.shape):
+        pointsplus =np.copy(controllpoints)
+        pointsminus=np.copy(controllpoints)
         pointsplus[index] +=h
         pointsminus[index]-=h
-        Cplus =Spline(pointsplus )
-        Cminus=Spline(pointsminus)
+        Cplus =Spline(c=pointsplus )
+        Cminus=Spline(c=pointsminus)
         uplus =uiter(f,Cplus ,u,lambd,iterations=2)
         uminus=uiter(f,Cminus,u,lambd,iterations=2)
         ep=error(f,uplus,Cplus,lambd,v)
         em=error(f,uminus,Cminus,lambd,v)
-        if ep<e:
-            e=ep
-            u=uplus
-            c=Cplus
-        if em<e:
-            e=em
-            u=uminus
-            c=Cminus
+        # if ep<e:
+        #     e=ep
+        #     u=uplus
+        #     c=Cplus
+        # if em<e:
+        #     e=em
+        #     u=uminus
+        #     c=Cminus
 
         gradients[index]=(ep-em)/2*h
     print(gradients)
@@ -140,14 +144,24 @@ def animate(frame):
     #gradients=gradients/np.sqrt(glen)/4
 
 
-    eta = 2  # Lernrate
-    alpha = 0.5  # Momentum
+    eta = 0.5  # Lernrate
+    alpha = 0.9  # Momentum
 
-    #delta_w_neu = (1 - alpha) * eta * gradients + alpha * delta_w_neu
+    delta_w_neu = (1 - alpha) * eta * gradients + alpha * delta_w_neu
     #print(delta_w_neu)
+    dw=gradients
+    l=np.linalg.norm(dw, axis=1)
+    
+    dw[l>1]/=l[l>1,None]
+    dw*=.5
 
-    C.setpoints(C.points-gradients*0.2)#new_variable=old_variable−learning_rate*gradient
-    #uplt.set_array(u)
+
+
+    controllpoints=controllpoints-dw
+    #controllpoints=controllpoints-gradients*0.2
+    #controllpoints=controllpoints-delta_w_neu
+    C.set_c(controllpoints)#new_variable=old_variable−learning_rate*gradient
+    uplt.set_array(u)
     mask,x,y=C.draw()
     Cplt.set_data(x,y)
 

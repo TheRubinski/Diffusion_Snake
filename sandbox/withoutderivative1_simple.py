@@ -92,14 +92,14 @@ def animate(frame):
         gradients.append(partial_derivative)"""
 
     h=1
-    gradients=np.zeros(C.points.shape)
-    for index in np.ndindex(C.points.shape):
-        pointsplus =np.copy(C.points)
-        pointsminus=np.copy(C.points)
+    gradients=np.zeros(C.c.shape)
+    for index in np.ndindex(C.c.shape):
+        pointsplus =np.copy(C.c)
+        pointsminus=np.copy(C.c)
         pointsplus[index] +=h
         pointsminus[index]-=h
-        Cplus =Spline(pointsplus )
-        Cminus=Spline(pointsminus)
+        Cplus =Spline(c=pointsplus )
+        Cminus=Spline(c=pointsminus)
         uplus =u_simple(f, Cplus)
         uminus=u_simple(f, Cminus)
         ep=error(f,uplus,Cplus,lambd,v)
@@ -127,7 +127,7 @@ def animate(frame):
     #print(delta_w_neu)
 
     #C.setpoints(C.points-delta_w_neu)
-    C.setpoints(C.points-gradients*eta)#new_variable=old_variable−learning_rate*gradient
+    C.set_c(C.c-gradients*eta)#new_variable=old_variable−learning_rate*gradient
 
     mask,x,y=C.draw()
     Cplt.set_data(x,y)

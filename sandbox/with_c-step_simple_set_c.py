@@ -40,7 +40,7 @@ def u_e_simple(f, spline):
 
 
 # Load the image
-image_path = './sample_images/circle.png'
+image_path = './sample_images/snail1.png'
 image = io.imread(image_path)
 f = color.rgb2gray(image)
 #f = gaussian_filter(f, 3)           # XXX to simulate full DS ... does help a little maybe ...
@@ -64,6 +64,9 @@ Cplt,=plt.plot(x,y,"-b")
 u,*_ = u_simple(f,C)
 step=0
 print_step = plt.text(1,5,"Step: "+str(step))
+
+print(C.spline.extrapolate)
+
 def animate(frame):
     global u_in,u_out,C,step, print_step
     
@@ -90,7 +93,8 @@ def animate(frame):
     # print(C.spline.t.shape, C.spline.t)
     # t_trunk = C.spline.t[:-k-1]    # remove k+1 last elements
     # print(t_trunk.shape, t_trunk)
-    C_points = C.spline.c # = C.spline(t_trunk)
+    C_points = C.c#C_points = C.spline.c # = C.spline(t_trunk)
+
     # print(B_Bold)
     # print(C.points.shape)
     # print(C_points.shape, "\n")
@@ -134,6 +138,7 @@ def animate(frame):
     eta = 0.001 # 0.2 # 2  # Lernrate
     # C.setpoints(C_points+gradients*eta)#new_variable=old_variable−learning_rate*gradient
     C.set_c(C_points+gradients*eta)
+    #print(C_points)
 
     mask,x,y=C.draw()
     Cplt.set_data(x,y)

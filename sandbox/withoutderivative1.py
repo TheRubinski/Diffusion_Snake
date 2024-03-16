@@ -31,11 +31,11 @@ def uiter(f,spline,u=None,lambd=10,tau=0.25,iterations=1):
             )/(1+tau/lambd**2)
     return uk
 
-def generate_points_in_circle(num_points):
+def generate_points_in_circle(num_points,radius=1,center=[(0,0)]):
     theta = np.linspace(0, 2 * np.pi, num_points,endpoint=False)
     x = np.cos(theta)
     y = np.sin(theta)
-    return np.stack((x, y), axis=-1)
+    return np.stack((x, y), axis=-1)*radius+center
 
 def error(f,u,C,lambd,v):
     futerm=0.5*np.sum((f-u)**2)
@@ -69,7 +69,7 @@ u=f
 
 size=np.array(f.shape)
 n_points = 20 #100 got also stuck # XXX was 20, a lot faster, but got stuck at snail-gap
-C=Spline((generate_points_in_circle(n_points)*size/3+size/2)) 
+C=Spline(generate_points_in_circle(n_points,size/3,size/2))
 
 mask,x,y=C.draw(np.zeros(f.shape,np.uint8))
 
@@ -93,8 +93,9 @@ def animate(frame):
     print_step.set_text("Step: "+str(step)) # = plt.text(1,5,"Step: "+str(step))
 
     u=uiter(f,C,u,lambd,iterations=4)
+    
     e=error(f,u,C,lambd,v)
-    print(e)
+    #print(e)
 
     
 
@@ -142,11 +143,11 @@ def animate(frame):
     eta = 2  # Lernrate
     alpha = 0.5  # Momentum
 
-    delta_w_neu = (1 - alpha) * eta * gradients + alpha * delta_w_neu
-    print(delta_w_neu)
+    #delta_w_neu = (1 - alpha) * eta * gradients + alpha * delta_w_neu
+    #print(delta_w_neu)
 
     C.setpoints(C.points-gradients*0.2)#new_variable=old_variable−learning_rate*gradient
-
+    #uplt.set_array(u)
     mask,x,y=C.draw()
     Cplt.set_data(x,y)
 

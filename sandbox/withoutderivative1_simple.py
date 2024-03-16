@@ -7,11 +7,11 @@ from matplotlib import pyplot as plt
 
 
 
-def generate_points_in_circle(num_points):
+def generate_points_in_circle(num_points,radius=1,center=[(0,0)]):
     theta = np.linspace(0, 2 * np.pi, num_points,endpoint=False)
     x = np.cos(theta)
     y = np.sin(theta)
-    return np.stack((x, y), axis=-1)
+    return np.stack((x, y), axis=-1)*radius+center
 
 def error(f,u,C,lambd,v):
     futerm=0.5*np.sum((f-u)**2)
@@ -48,13 +48,13 @@ u=f
 
 size=np.array(f.shape)
 n_points = 100
-C=Spline((generate_points_in_circle(n_points)*size/3+size/2)) 
+C=Spline(generate_points_in_circle(n_points,size/3,size/2)) 
 
 mask,x,y=C.draw(np.zeros(f.shape,np.uint8))
 
 
 
-lambd, v = 10, 0.000001
+lambd, v = 10, 0.000005
 
 
 
@@ -66,11 +66,11 @@ Cplt,=plt.plot(x,y,"-b")
 u = u_simple(f,C)
 delta_w_neu=0
 step=0
-print_step = plt.text(1,5,"Step: "+str(step))
+print_step = plt.text(1,5,f"Step: {step}")
 def animate(frame):
     global u,delta_w_neu,C,step, print_step
     
-    print_step.set_text("Step: "+str(step)) # = plt.text(1,5,"Step: "+str(step))
+    print_step.set_text(f"Step: {step}") # = plt.text(1,5,"Step: "+str(step))
 
     # u=uiter(f,C,u,lambd,iterations=4)
     u=u_simple(f,C)
@@ -121,11 +121,12 @@ def animate(frame):
 
 
     eta = 0.1 # 0.2 # 2  # Lernrate
-    alpha = 0.5  # Momentum
+    alpha = 0.8  # Momentum
 
     delta_w_neu = (1 - alpha) * eta * gradients + alpha * delta_w_neu
     #print(delta_w_neu)
 
+    #C.setpoints(C.points-delta_w_neu)
     C.setpoints(C.points-gradients*eta)#new_variable=old_variable−learning_rate*gradient
 
     mask,x,y=C.draw()

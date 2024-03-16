@@ -11,6 +11,10 @@ class Spline:
         self.points=np.array(points)
         closedpoints=np.vstack((self.points,(self.points[0],)))
         self.spline = interpolate.make_interp_spline(np.linspace(0, 1, closedpoints.shape[0]),closedpoints, k=3,bc_type="periodic")
+        #self.spline = interpolate.make_interp_spline(np.linspace(0, 1, closedpoints.shape[0]),closedpoints, k=3)
+        #self.spline = interpolate.BSpline(self.spline.t,closedpoints, k=3,extrapolate= "periodic")
+        #print(self.spline.t,closedpoints)
+        #self.spline = interpolate.BSpline(self.spline.t,closedpoints, k=3)
     @staticmethod
     def polygon_direction(points):
         direction_sum = 0

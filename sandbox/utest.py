@@ -47,7 +47,7 @@ plt.show()
 #print(np.info(f))
 
 spline=Spline([(100,29),(117,100),(15,104),(41,27)])
-mask,*_=spline.draws(np.zeros(f.shape,np.uint8))
+mask,*_=spline.draw(np.zeros(f.shape,np.uint8))
 plt.imshow(mask, interpolation='nearest')
 plt.show()
 

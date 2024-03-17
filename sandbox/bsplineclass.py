@@ -35,11 +35,34 @@ class Spline:
         c_closed=np.vstack((c,c[:self.k]))
         self.spline = interpolate.BSpline(t, c_closed,self.k,extrapolate= "periodic")
 
-        self.points = self.spline(np.linspace(0,1,n,endpoint=False))
+        
+        spaced = self.xbmax(n)
+        self.points = self.spline(spaced)
 
-    def designmatrix(self, points):
+    def xbmax(self, n=None):
+        #page 25
+        #The cyclic tridiagonal matrix B contains the spline basis functions evaluated
+        #at the nodes si: Bij = Bi(sj ), where si corresponds to the maximum of Bi
+        # this function provides the x for the si
+        if n is None:
+            n=len(self.c)
+        offset=-(self.k-1)/(n*2)
+        spaced=np.linspace(offset, 1+offset, n,endpoint=False)%1
+        return spaced
+
+    def designmatrix(self, x=None,wrap=False):
         # In each row of the design matrix all the basis elements are evaluated at the certain point (first row - x[0], …, last row - x[-1]).
-        return self.spline.design_matrix(points, self.spline.t, self.k,extrapolate= "periodic").toarray()
+        if x is not None:
+            x=self.xbmax()
+            
+        m= self.spline.design_matrix(x, self.spline.t, self.k,extrapolate= "periodic").toarray()
+        if not wrap:
+            return m
+        first_part = m[:,:-self.k]
+        second_part = m[:,-self.k:]
+        second_length = second_part.shape[1]
+        first_part[:,:second_length] += second_part
+        return first_part
 
     @staticmethod
     def polygon_direction(points):

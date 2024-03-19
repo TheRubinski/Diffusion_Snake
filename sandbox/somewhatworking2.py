@@ -109,8 +109,8 @@ def animate(frame):
     
     print_step.set_text("Step: "+str(step)) # = plt.text(1,5,"Step: "+str(step))
 
-    #u=uiter(f,C,u,lambd,iterations=1)
-    u, u_in, u_out, e_p, e_m=u_e_simple(f,C)
+    u=uiter(f,C,u,lambd,iterations=4)
+    #u, u_in, u_out, e_p, e_m=u_e_simple(f,C)
     
     e=error(f,u,C,lambd,v)
     #print(e)
@@ -136,9 +136,11 @@ def animate(frame):
 
     #compute e
     grad_x, grad_y = np.gradient(u)
-    #e = (f - u) ** 2#+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
-    ep=e_p
-    em=e_m
+    e = (f - u) ** 2+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
+    ep=e
+    em=e
+    #ep=e_p
+    #em=e_m
     #e=uiter(e,C,e,lambd,iterations=1)
     
     #compute mask 0=outside 1=spline 2=inside
@@ -151,7 +153,7 @@ def animate(frame):
     #print(list(zip(s,normals)))
     for i,(si,ni) in enumerate(zip(s,normals)):
         #ni=ni/np.linalg.norm(ni)
-        for d in range(0,30):
+        for d in range(4,30):
             x,y=(si+ni*d/2).astype(int)
             #print(x,y,mask[x,y])
             if mask[x,y]==0:
@@ -163,7 +165,7 @@ def animate(frame):
             x,y=si.astype(int)
             esiplus[i]=ep[x,y]
         
-        for d in range(0,30):
+        for d in range(4,30):
             x,y=(si-ni*d/2).astype(int)
             if mask[x,y]==2:
                 esiminus[i]=em[x,y]
@@ -174,15 +176,23 @@ def animate(frame):
             esiminus[i]=em[x,y]
     
     esi=esiplus-esiminus
-    print(esi)
+    #print(esi)
 
-    
 
-    for m in range(N):
+
+    sumterm=(esiplus-esiminus)[:,None]*normals + v*(np.roll(s, 1,axis=0)-2*s+np.roll(s, -1,axis=0))
+    gradients=np.dot(binv, sumterm)
+    """for m in range(N):
+        #gradients[m]=sum([binv[m,i]*( esi[i]*normals[i] + v*(s[(i-1)%N]-2*s[i]+s[(i+1)%N]) ) for i in range(N)])#this line works
         #print(np.all(B-B.T<0.001))
         #gradients[m]=sum([binv[m,i]*( -esi[i]*normals[i] ) for i in range(N)])
-        gradients[m]=sum([binv[m,i]*( esi[i]*normals[i] + v*(s[(i-1)%N]-2*s[i]+s[(i+1)%N]) ) for i in range(N)])
-        #gradients[m]=sum([binv[m,i]*(  -v*(s[(i-1)%N]-2*s[i]+s[(i+1)%N]) ) for i in range(N)])
+
+
+        #vs=v*(np.roll(s, 1,axis=0)-2*s+np.roll(s, -1,axis=0))
+        #gradients[m]=sum([binv[m,i]*( esi[i]*normals[i] + vs[i] ) for i in range(N)])
+        gradients[m]=sum([binv[m,i]*( sumterm[i] ) for i in range(N)])
+        print(sumterm.shape)
+        #gradients[m]=sum([binv[m,i]*(  -v*(s[(i-1)%N]-2*s[i]+s[(i+1)%N]) ) for i in range(N)])"""
     
 
     controllpoints=controllpoints+gradients*0.4
@@ -204,7 +214,7 @@ def animate(frame):
     C.set_c(controllpoints)#new_variable=old_variable−learning_rate*gradient
     
     mask,x,y=C.draw()
-    uplt.set_array(f.T)
+    uplt.set_array(u.T)
     Cplt.set_data(x,y)
 
     step += 1

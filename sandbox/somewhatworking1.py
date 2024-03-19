@@ -62,17 +62,21 @@ def u_e_simple(f, spline):
     return u, u_in, u_out, e_p, e_m
 
 
-
-
-
+def readimageasnp(image_path):
+    image = io.imread(image_path)
+    f = color.rgb2gray(image)
+    return f
 
 
 
 
 # Load the image
-image_path = './sample_images/roundish1_100.png'
-image = io.imread(image_path)
-f = color.rgb2gray(image)
+image_path = './sample_images/snail1_gray.png'
+
+
+f = readimageasnp(image_path)
+#print(np.max(f),np.min(f))
+#exit()
 u=f
 
 
@@ -98,16 +102,20 @@ from matplotlib import animation
 fig=plt.figure()
 uplt=plt.imshow(u)
 Cplt,=plt.plot(x,y,"-b")
-u=uiter(f,C,u,lambd,iterations=100)
+print_step = plt.text(1,5,"Step: 0")
+#cplt,=plt.plot(*controllpoints.T,"or")
+
+
 delta_w_neu=0
 step=0
-print_step = plt.text(1,5,"Step: "+str(step))
+
+
 
 
 def animate(frame):
     global u,delta_w_neu,C,step, print_step,controllpoints
     
-    print_step.set_text("Step: "+str(step)) # = plt.text(1,5,"Step: "+str(step))
+    print_step.set_text(f"Step: {step}") # = plt.text(1,5,"Step: "+str(step))
 
     #u=uiter(f,C,u,lambd,iterations=1)
     u, u_in, u_out, e_p, e_m=u_e_simple(f,C)
@@ -135,7 +143,7 @@ def animate(frame):
     gradients=np.zeros(s.shape)
 
     #compute e
-    grad_x, grad_y = np.gradient(u)
+    #grad_x, grad_y = np.gradient(u)
     #e = (f - u) ** 2#+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
     ep=e_p
     em=e_m
@@ -174,18 +182,15 @@ def animate(frame):
             esiminus[i]=em[x,y]
     
     esi=esiplus-esiminus
-    print(esi)
+    #print(esi)
 
     
-
-    for m in range(N):
-        #print(np.all(B-B.T<0.001))
-        #gradients[m]=sum([binv[m,i]*( -esi[i]*normals[i] ) for i in range(N)])
-        gradients[m]=sum([binv[m,i]*( esi[i]*normals[i] + v*(s[(i-1)%N]-2*s[i]+s[(i+1)%N]) ) for i in range(N)])
-        #gradients[m]=sum([binv[m,i]*(  -v*(s[(i-1)%N]-2*s[i]+s[(i+1)%N]) ) for i in range(N)])
+    sumterm=(esiplus-esiminus)[:,None]*normals + v*(np.roll(s, 1,axis=0)-2*s+np.roll(s, -1,axis=0))
+    gradients=np.dot(binv, sumterm)
+    
     
 
-    controllpoints=controllpoints+gradients*0.4
+    controllpoints=controllpoints+gradients*0.7
     #print(gradients)
 
   
@@ -206,10 +211,11 @@ def animate(frame):
     mask,x,y=C.draw()
     uplt.set_array(f.T)
     Cplt.set_data(x,y)
+    #cplt.set_data(*controllpoints.T)
 
     step += 1
 
-    return[uplt,Cplt,print_step]
+    return[uplt,Cplt,print_step]#,cplt]
 
 animate(0)
 animate(1)

@@ -48,10 +48,10 @@ def generate_points_in_circle(num_points,radius=1,center=[(0,0)]):
 
 
 
-n=10
+n=5
 c=generate_points_in_circle(n)#+np.random.rand(n,2)*0.1
 # Degree of the B-spline
-k =4
+k =2
 
 C = Spline(c=c,k=k)
 #C = BSpline()
@@ -65,6 +65,7 @@ offset=-(k-1)*(1/len(c)/2)
 spaced=np.linspace(offset, 1+offset, len(c),endpoint=False)%1
 print(spaced)
 m=C.designmatrix(spaced,wrap=True)
+
 print(m)
 print(np.linalg.inv(m))
 

@@ -52,7 +52,7 @@ class Spline:
 
     def designmatrix(self, x=None,wrap=False):
         # In each row of the design matrix all the basis elements are evaluated at the certain point (first row - x[0], …, last row - x[-1]).
-        if x is not None:
+        if x is None:
             x=self.xbmax()
             
         m= self.spline.design_matrix(x, self.spline.t, self.k,extrapolate= "periodic").toarray()
@@ -82,17 +82,26 @@ class Spline:
     def draw(self,canvas=None,steps=1000,drawinside=True):
         if canvas is None:
             canvas = np.zeros((100, 100), int)
+        else:
+            canvas = np.zeros((canvas.shape), int)
         xi,yi = self.spline(np.linspace(0, 1, steps)).T
 
         px,py=xi[:-1],yi[:-1]
         if drawinside:
             rr, cc = polygon(px,py, canvas.shape)
-            canvas[cc,rr] = 2
+            #canvas[cc,rr] = 2
+            canvas[rr,cc] = 2
         rr, cc = polygon_perimeter(px,py, canvas.shape)
-        canvas[cc,rr] = 1
+        #canvas[cc,rr] = 1
+        canvas[rr,cc] = 1
         return canvas,xi,yi
     
     def get_masks(self,canvas=None,steps=1000):
+        canvas,*_=self.draw(canvas,steps)
+        return (canvas==2),(canvas==0),(canvas==1)
+        #return (canvas==2).astype(int),(canvas==0).astype(int),(canvas==1).astype(int)
+        #return in_mask, out_mask, spline_mask
+
         if canvas is None:
             in_mask = np.zeros((100, 100), int)
         else:
@@ -106,7 +115,7 @@ class Spline:
         rr, cc = polygon_perimeter(px,py, in_mask.shape)     # only spline curve
         spline_mask[cc,rr] = 1
         in_mask = np.logical_and(in_mask, np.logical_not(spline_mask))  # remove elements also in spline 
-        out_mask = np.logical_not(np.logical_and(in_mask, spline_mask))
+        out_mask = np.logical_not(np.logical_or(in_mask, spline_mask))
         return in_mask, out_mask, spline_mask
     
     def get_2masks(self,canvas=None,steps=1000):
@@ -123,12 +132,12 @@ class Spline:
         out_mask = np.logical_not(in_mask)
         return in_mask, out_mask
     
-    def normals(self, points=None):
-        if points is None:
-            points = np.linspace(0,1,len(self.points),endpoint=False)
-        dx,dy=self.spline(points,1).T
-        r=Spline.polygon_direction(self.points)
-        return -dy*r,dx*r
+    def normals(self, x=None):#point outside
+        if x is None:
+            x = np.linspace(0,1,len(self.points),endpoint=False)
+        dx,dy=self.spline(x,1).T
+        r=Spline.polygon_direction(self.spline(x))
+        return np.array([-dy*r,dx*r])
     
     
 
@@ -165,6 +174,12 @@ if __name__=="__main__":
         
         spline=Spline(points)
         img,xi,yi=spline.draw(steps=1000)
+
+        #imgin,imgout,imgspline=spline.get_masks()
+        #imgin2,imgout2,imgspline2=(img==2),(img==0),(img==1)
+        #img=np.zeros(imgin.shape)
+        #print(np.all(imgin==imgin2)and np.all(imgout==imgout2)and np.all(imgspline==imgspline2))
+        #print(imgin2)
 
         splineplt.set_data(xi, yi)
         imgplt.set_array(img)

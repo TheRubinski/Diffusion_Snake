@@ -40,7 +40,7 @@ def u_e_simple(f, spline):
 
 
 # Load the image
-image_path = './sample_images/snail1.png'
+image_path = './sample_images/rectangular.png'
 image = io.imread(image_path)
 f = color.rgb2gray(image)
 #f = gaussian_filter(f, 3)           # XXX to simulate full DS ... does help a little maybe ...

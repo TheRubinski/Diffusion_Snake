@@ -4,7 +4,21 @@ from skimage import io, color
 from matplotlib import pyplot as plt
 
 
-def u_full(f,spline,u=None,lambd=10,tau=0.25,iterations=1):
+def u_e_simple(f, spline):
+    mask,*_=spline.draw(f,steps=200)
+    in_mask, out_mask, _ = (mask==2),(mask==0),(mask==1)
+
+    u_in, u_out = in_mask.astype(float), out_mask.astype(float),
+    u_in *= np.sum(f*in_mask) / np.sum(in_mask) 
+    u_out*= np.sum(f*out_mask)/ np.sum(out_mask)
+    u = u_in + u_out
+    # "energy" outside, inside
+    e_p = np.power(((f*out_mask) - u_out), 2)
+    e_m = np.power(((f*in_mask)  - u_in),  2)
+    return mask, u, e_p, e_m
+
+
+def u_e_full(f,spline,u=None,lambd=10,tau=0.25,iterations=1):
     if u is not None:
         uk=u
     else:
@@ -25,19 +39,13 @@ def u_full(f,spline,u=None,lambd=10,tau=0.25,iterations=1):
             +tau*sum(np.sqrt(w*pw[j])*puk[j]for j in neighbourslices)#u_k=u_(k+1)
             +(tau/lambd**2)*f
             )/(1+tau/lambd**2)
-    return uk
-
-
-def u_e_full():
-    raise(NotImplementedError)
-    return
-
-
-def generate_points_in_circle(num_points,radius=1,center=[(0,0)]):
-    theta = -np.linspace(0, 2 * np.pi, num_points,endpoint=False)
-    x = np.cos(theta)
-    y = np.sin(theta)
-    return np.stack((x, y), axis=-1)*radius+center
+    u = uk
+    # "energy" outside, inside
+    grad_x, grad_y = np.gradient(u)
+    e = (f - u) ** 2+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
+    e_p=e
+    e_m=e
+    return u, mask, e_p, e_m
 
 
 def error(f,u,C,lambd,v):
@@ -52,16 +60,11 @@ def error(f,u,C,lambd,v):
     return futerm+duterm+cnormterm
 
 
-def u_e_simple(f, spline):
-    in_mask, out_mask, _ = spline.get_masks(f, steps=200)
-    u_in, u_out = in_mask.astype(float), out_mask.astype(float),
-    u_in *= np.sum(f*in_mask) / np.sum(in_mask) 
-    u_out*= np.sum(f*out_mask)/ np.sum(out_mask)
-    u = u_in + u_out
-    # "energy" outside, inside
-    e_p = np.power(((f*out_mask) - u_out), 2)
-    e_m = np.power(((f*in_mask)  - u_in),  2)
-    return u, u_in, u_out, e_p, e_m
+def generate_points_in_circle(num_points,radius=1,center=[(0,0)]):
+    theta = -np.linspace(0, 2 * np.pi, num_points,endpoint=False)
+    x = np.cos(theta)
+    y = np.sin(theta)
+    return np.stack((x, y), axis=-1)*radius+center
 
 
 def readimageasnp(image_path):
@@ -97,60 +100,54 @@ class DiffusionSnake:
         self.Binv=np.linalg.inv(self.B)
 
         self.lambd, self.v, self.alpha = lambd, v, alpha
-        if   mode == "simple": self.u_func = u_e_simple
-        elif mode == "full":   self.u_func = u_e_full
-        else:                  raise(NameError("Mode has to be 'full' or 'simple'"))
+
+        if mode == "simple": 
+            self.u_func = u_e_simple
+            self.optimizer_range = range(0,30)  # XXX @Konstatin: where does this range come from?
+        elif mode == "full":   
+            self.u_func = u_e_full
+            self.optimizer_range = range(4,30)  # XXX @Konstatin: where does this range come from?
+        else:                  
+            raise(NameError("Mode has to be 'full' or 'simple'"))
 
 
     def step(self):
         r""" Let Diffusion Snake performce a single iteration
         """
-        u, u_in, u_out, ep, em = self.u_func(self.f,self.C)
-        # e=error(f,u,C,lambd,v)
-        
+        mask, u, ep, em = self.u_func(self.f,self.C)    # depend on mode simple or full
         x=self.C.xbmax() #compute best x
 
         #compute normals and nodes
         normals=self.C.normals(x).T # normals point outside
-        # Normalize each row vector
-        normals = normals / np.linalg.norm(normals, axis=1)[:,None]
-        #print(normals)
-
-
+        normals = normals / np.linalg.norm(normals, axis=1)[:,None] # Normalize each row vector
         s=self.C.spline(x)
-        N=len(s)#number of points
-
-        gradients=np.zeros(s.shape)
-        #compute mask 0=outside 1=spline 2=inside
-
-        mask,*_=self.C.draw(np.zeros(self.f.shape))
 
         # e-part-optimizer from XXX
+        N=len(s)#number of points
         esiplus =np.zeros(N)#outside
         esiminus=np.zeros(N)#inside
         for i,(si,ni) in enumerate(zip(s,normals)):
-            for d in range(0,30):
+            for d in self.optimizer_range:
                 x,y=(si+ni*d/2).astype(int)
                 if mask[x,y]==0:
                     esiplus[i]=ep[x,y]
                     break
-            else:
-                print(":(")
-                x,y=si.astype(int)
-                esiplus[i]=ep[x,y]
-            
-            for d in range(0,30):
+            # else:                             # XXX @Konstantin: Do we need this else-Blocks?
+            #     print(":(")
+            #     x,y=si.astype(int)
+            #     esiplus[i]=ep[x,y]
+            for d in self.optimizer_range:               
                 x,y=(si-ni*d/2).astype(int)
                 if mask[x,y]==2:
                     esiminus[i]=em[x,y]
                     break
-            else:
-                print(":(")
-                x,y=si.astype(int)
-                esiminus[i]=em[x,y]
-        # esi=esiplus-esiminus
+            # else:
+            #     print(":(")
+            #     x,y=si.astype(int)
+            #     esiminus[i]=em[x,y]
 
         
+        gradients=np.zeros(s.shape)
         sumterm=(esiplus-esiminus)[:,None]*normals + self.v*(np.roll(s, 1,axis=0)-2*s+np.roll(s, -1,axis=0))
         gradients=np.dot(self.Binv, sumterm)
         c_new=self.C.c+gradients*self.alpha

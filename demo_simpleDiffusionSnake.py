@@ -10,7 +10,7 @@ from src.diffusionSnake import DiffusionSnake
 image_path = './sample_images/snail1_gray.png'
 n_steps = 1000  # max iterations
 eps = 1e-4      # for convergence
-lambd, v=5,0.1  # 
+lambd, v=5,0.1  # Parameters for Diffusion Snake. labda is not needed for simple mode
 n_points = 100  # number of controllpoints for spline
 alph=0.7        # learning rate 
 

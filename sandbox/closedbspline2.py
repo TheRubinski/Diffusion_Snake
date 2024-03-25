@@ -4,7 +4,7 @@ from scipy import interpolate
 
 
 
-from src.ciclebspline import Spline
+from src.cicleBspline import Spline
 
 
 

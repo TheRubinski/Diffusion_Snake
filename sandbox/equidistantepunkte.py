@@ -23,14 +23,22 @@ k =2
 C = Spline(c,k=k)
 t_values = np.linspace(0, 1, 1000)
 curve_points = C.spline(t_values)
-print(np.linalg.norm(curve_points[0]-curve_points[-1]))# first and last are he same
-distsum=0
-dists=[0]
-for i in range(len(curve_points)-1):
-    distsum+=np.linalg.norm(curve_points[i]-curve_points[i+1])
-    dists.append(distsum)
-dists=np.array(dists)/distsum#normalize dists from 0 to 1
+#print(np.linalg.norm(curve_points[0]-curve_points[-1]))# first and last are he same d.h. shoild be 0
 
+
+#distsum=0
+#dists=[0]
+#for i in range(len(curve_points)-1):
+#    distsum+=np.linalg.norm(curve_points[i]-curve_points[i+1])
+#    dists.append(distsum)
+#dists=np.array(dists)/distsum#normalize dists from 0 to 1
+
+
+distances = np.linalg.norm(curve_points[1:] - curve_points[:-1], axis=1)
+cumulative_distances = np.cumsum(distances)
+normalized_distances = cumulative_distances / cumulative_distances[-1]
+normalized_distances = np.insert(normalized_distances, 0, 0)
+dists=normalized_distances
 
 #newspacings=np.linspace(0, 1, 100,endpoint=False)
 #points=[]
@@ -48,6 +56,8 @@ x0,x1=dists[index-1],dists[index]
 y0,y1=curve_points[index-1],curve_points[index]
 y=(y0*(x1-x)[:,None]+y1*(x-x0)[:,None])/(x1-x0)[:,None]# linear interpolation
 points=y
+
+#print(np.linalg.norm(points[0]-points[-1]))#should not be 0
 
 
 points=np.array(points)

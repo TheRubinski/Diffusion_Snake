@@ -38,6 +38,9 @@ def animate(frame):
     # if step == n_steps: # XXX Maybe use pauseResume.py for this
 
     print_step.set_text(f"Step: {step}") # = plt.text(1,5,"Step: "+str(step))
+    
+    if step%100==0:
+        ds.respacepoints()
 
     e_p = ds.step()
     u,x,y=ds.draw()

@@ -16,7 +16,7 @@ def generate_points_in_circle_bad(num_points,radius=1,center=[(0,0)]):
 
 
 
-c=generate_points_in_circle_bad(10)#+np.random.rand(n,2)*0.1
+c=generate_points_in_circle_bad(100)#+np.random.rand(n,2)*0.1
 # Degree of the B-spline
 k =2
 
@@ -33,7 +33,7 @@ curve_points = C.spline(t_values)
 #    dists.append(distsum)
 #dists=np.array(dists)/distsum#normalize dists from 0 to 1
 
-
+#chatgptcode
 distances = np.linalg.norm(curve_points[1:] - curve_points[:-1], axis=1)
 cumulative_distances = np.cumsum(distances)
 normalized_distances = cumulative_distances / cumulative_distances[-1]
@@ -60,7 +60,8 @@ points=y
 #print(np.linalg.norm(points[0]-points[-1]))#should not be 0
 
 
-points=np.array(points)
+
+print(points)
 
 
 
@@ -75,6 +76,6 @@ import matplotlib.pyplot as plt
 plt.plot(curve_points[:,0], curve_points[:,1], label='Closed B-spline Curve', alpha=0.5)
 plt.scatter(c[:,0], c[:,1], c='red', label='Control Points')
 #plt.scatter(curve_points2[:,0], curve_points2[:,1], c="b", alpha=0.5)
-plt.scatter(*points.T, c="b", alpha=0.5)
+plt.scatter(*points.T, c="b")
 plt.legend()
 plt.show()

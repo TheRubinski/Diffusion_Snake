@@ -164,7 +164,29 @@ class DiffusionSnake:
         _, x, y = self.C.draw(np.zeros(self.f.shape,np.uint8), steps=1000) # XXX: Könnte es sein, dass diese steps der Grund für die Missing-Pixels sind?
 
         return self.u, x, y
+    
+    def respacepoints(self,steps=1000):
+        curve_points = self.C.spline(np.linspace(0, 1, steps))
+        #print(np.linalg.norm(curve_points[0]-curve_points[-1]))# first and last are he same d.h. shoild be 0
+
+        distances = np.linalg.norm(curve_points[1:] - curve_points[:-1], axis=1)
+        cumulative_distances = np.cumsum(distances)
+        normalized_distances = np.insert(cumulative_distances / cumulative_distances[-1], 0, 0)
+        dists=normalized_distances
+
+        x=np.linspace(0, 1, 100,endpoint=False)
+        index=np.searchsorted(dists,x)
+        x0,x1=dists[index-1],dists[index]
+        y0,y1=curve_points[index-1],curve_points[index]
+        y=(y0*(x1-x)[:,None]+y1*(x-x0)[:,None])/(x1-x0)[:,None]# linear interpolation
+        points=y
+
+        self.C.setpoints(points)
+
+
+
 
     def get_controlpoints(self):
         r"""
         #Returns: current controllpoints. For Plotting/Debugging"""
+    

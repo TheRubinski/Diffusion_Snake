@@ -4,50 +4,6 @@ from skimage import io, color
 from matplotlib import pyplot as plt
 
 
-def u_e_simple(f, spline):
-    mask,*_=spline.draw(f,steps=200)
-    in_mask, out_mask, _ = (mask==2),(mask==0),(mask==1)
-
-    u_in, u_out = in_mask.astype(float), out_mask.astype(float),
-    u_in *= np.sum(f*in_mask) / np.sum(in_mask) 
-    u_out*= np.sum(f*out_mask)/ np.sum(out_mask)
-    u = u_in + u_out
-    # "energy" outside, inside
-    e_p = np.power(((f*out_mask) - u_out), 2)
-    e_m = np.power(((f*in_mask)  - u_in),  2)
-    return mask, u, e_p, e_m
-
-
-def u_e_full(f,spline,u=None,lambd=10,tau=0.25,iterations=1):
-    if u is not None:
-        uk=u
-    else:
-        uk=f
-
-    mask,*_=spline.draw(np.zeros(f.shape,np.uint8),drawinside=False,steps=200)
-    w=mask!=1
-    pw = np.pad(w, pad_width=1, constant_values=0)
-    
-    smid=slice(1,-1);sup=slice(2,None);sdown=slice(None,-2)
-    neighbourslices=[(sup,smid),(sdown,smid),(smid,sup),(smid,sdown)]
-
-    for i in range(iterations):
-        puk = np.pad(uk, pad_width=1, constant_values=0)#padded uk
-
-        uk=(
-            (1-tau*sum(np.sqrt(w*pw[j])for j in neighbourslices))*uk
-            +tau*sum(np.sqrt(w*pw[j])*puk[j]for j in neighbourslices)#u_k=u_(k+1)
-            +(tau/lambd**2)*f
-            )/(1+tau/lambd**2)
-    u = uk
-    # "energy" outside, inside
-    grad_x, grad_y = np.gradient(u)
-    e = (f - u) ** 2+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
-    e_p=e
-    e_m=e
-    return u, mask, e_p, e_m
-
-
 def error(f,u,C,lambd,v):
     futerm=0.5*np.sum((f-u)**2)
 
@@ -102,14 +58,56 @@ class DiffusionSnake:
         self.lambd, self.v, self.alpha = lambd, v, alpha
 
         if mode == "simple": 
-            self.u_func = u_e_simple
-            self.optimizer_range = range(0,30)  # XXX @Konstatin: where does this range come from?
+            self.u_func = self.u_e_simple
+            self.optimizer_range = range(0,20)  #.. range random
         elif mode == "full":   
-            self.u_func = u_e_full
-            self.optimizer_range = range(4,30)  # XXX @Konstatin: where does this range come from?
+            self.u_func = self.u_e_full
+            self.optimizer_range = range(4,30)  #.. 
         else:                  
             raise(NameError("Mode has to be 'full' or 'simple'"))
 
+
+    def u_e_simple(self, f, spline):
+        mask,*_=spline.draw(f,steps=200)
+        in_mask, out_mask, _ = (mask==2),(mask==0),(mask==1)
+
+        u_in, u_out = in_mask.astype(float), out_mask.astype(float),
+        u_in *= np.sum(f*in_mask) / np.sum(in_mask) 
+        u_out*= np.sum(f*out_mask)/ np.sum(out_mask)
+        u = u_in + u_out
+        # "energy" outside, inside
+        e_p = np.power(((f*out_mask) - u_out), 2)
+        e_m = np.power(((f*in_mask)  - u_in),  2)
+        return mask, u, e_p, e_m
+
+
+    def u_e_full(self, f,spline): #u=None) #lambd=10,tau=0.25,iterations=1):
+        uk, lambd = self.u, self.lambd
+        tau=0.25; iterations=4
+
+
+        mask,*_=spline.draw(np.zeros(f.shape,np.uint8),drawinside=False,steps=200)
+        w=mask!=1
+        pw = np.pad(w, pad_width=1, constant_values=0)
+        
+        smid=slice(1,-1);sup=slice(2,None);sdown=slice(None,-2)
+        neighbourslices=[(sup,smid),(sdown,smid),(smid,sup),(smid,sdown)]
+
+        for i in range(iterations):
+            puk = np.pad(uk, pad_width=1, constant_values=0)#padded uk
+
+            uk=(
+                (1-tau*sum(np.sqrt(w*pw[j])for j in neighbourslices))*uk
+                +tau*sum(np.sqrt(w*pw[j])*puk[j]for j in neighbourslices)#u_k=u_(k+1)
+                +(tau/lambd**2)*f
+                )/(1+tau/lambd**2)
+        u = uk
+        # "energy" outside, inside
+        grad_x, grad_y = np.gradient(u)
+        e = (f - u) ** 2+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
+        e_p=e
+        e_m=e
+        return mask, u, e_p, e_m
 
     def step(self):
         r""" Let Diffusion Snake performce a single iteration
@@ -132,19 +130,19 @@ class DiffusionSnake:
                 if mask[x,y]==0:
                     esiplus[i]=ep[x,y]
                     break
-            # else:                             # XXX @Konstantin: Do we need this else-Blocks?
-            #     print(":(")
-            #     x,y=si.astype(int)
-            #     esiplus[i]=ep[x,y]
+            else:
+                #print(":(")
+                x,y=si.astype(int)
+                esiplus[i]=ep[x,y]
             for d in self.optimizer_range:               
                 x,y=(si-ni*d/2).astype(int)
                 if mask[x,y]==2:
                     esiminus[i]=em[x,y]
                     break
-            # else:
-            #     print(":(")
-            #     x,y=si.astype(int)
-            #     esiminus[i]=em[x,y]
+            else:
+                #print(":(")
+                x,y=si.astype(int)
+                esiminus[i]=em[x,y]
 
         
         gradients=np.zeros(s.shape)
@@ -154,7 +152,7 @@ class DiffusionSnake:
 
         self.C.set_c(c_new)
         self.u = u
-        return
+        return em
     
 
     def draw(self):

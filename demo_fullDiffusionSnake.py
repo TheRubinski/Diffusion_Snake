@@ -1,5 +1,5 @@
 import numpy as np
-from bsplineclass import Spline
+from src.cicleBspline import Spline
 from skimage import io, color
 from matplotlib import pyplot as plt
 

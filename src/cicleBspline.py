@@ -24,9 +24,6 @@ class Spline:
         self.c=self.spline.c[:-self.k]
 
     def set_c(self, c):
-        #self.spline.c = c
-        #return
-
         self.c = c
         n=len(c)
         num_knots = n +self.k*2+1
@@ -89,10 +86,8 @@ class Spline:
         px,py=xi[:-1],yi[:-1]
         if drawinside:
             rr, cc = polygon(px,py, canvas.shape)
-            #canvas[cc,rr] = 2
             canvas[rr,cc] = 2
         rr, cc = polygon_perimeter(px,py, canvas.shape)
-        #canvas[cc,rr] = 1
         canvas[rr,cc] = 1
         return canvas,xi,yi
     

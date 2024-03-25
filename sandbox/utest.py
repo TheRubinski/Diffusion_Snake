@@ -6,7 +6,7 @@ from PIL import Image
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
-from bsplineclass import Spline
+from src.cicleBspline import Spline
 from math import sqrt
 
 

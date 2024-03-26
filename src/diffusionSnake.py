@@ -35,7 +35,7 @@ class DiffusionSnake:
         or the simplified Functional at the catoon limit(p.20, 2.13), if mode is "simple"
         by performing a gradient decent step on each step-call
     """    
-    def __init__(self, image_path, v, n_points, alpha, mode="full", lambd=2, tau=0.25, u_iterations=1):
+    def __init__(self, image_path, v, n_points, alpha, mode="full", lambd=2, tau=0.25, u_iterations=4):
         r"""Init function
             #Args:
                 image_path: the image-volume to segment
@@ -46,7 +46,7 @@ class DiffusionSnake:
                 Use simplified Functional at the catoon limit, if mode is "simple"
                 --- Only for full mode ---
                 lambd: Blur-factor for u-function
-                tau: tau > 0.25 leads to instability
+                tau: stepsize, tau > 0.25 leads to instability
                 u_iterations: Determines how strongly u is adapted to the new curve in each step
         """
         assert(tau <= 0.25)
@@ -88,8 +88,8 @@ class DiffusionSnake:
         u_out*= np.sum(f*out_mask)/ np.sum(out_mask)
         u = u_in + u_out
         # "energy" outside, inside
-        e_p = np.power(((f*out_mask) - u_out), 2)
-        e_m = np.power(((f*in_mask)  - u_in),  2)
+        e_p = (f*out_mask - u_out)**2
+        e_m = (f*in_mask  - u_in )**2
         return mask, u, e_p, e_m
 
 
@@ -99,13 +99,16 @@ class DiffusionSnake:
             f: the image-volume
             spline: current spline
             lambd: Blur-factor
-            tau: tau > 0.25 leads to instability
+            tau: stepsize, tau > 0.25 leads to instability
             iterations: bestimmt, wie stark u in jedem step an die neue kurve angepasst wird
         """
         f, spline, uk, lambd, tau, iterations = self.f, self.C, self.u, self.lambd, self.tau, self.u_iterations   
 
         mask,*_=spline.draw(np.zeros(f.shape,np.uint8),drawinside=False,steps=200)
-        w=mask!=1
+        # w= mask!=1
+        in_mask, out_mask, spline_mask = (mask==2),(mask==0),(mask==1)
+        w = spline_mask!=1
+        
         pw = np.pad(w, pad_width=1, constant_values=0)
         
         smid=slice(1,-1);sup=slice(2,None);sdown=slice(None,-2)
@@ -113,20 +116,39 @@ class DiffusionSnake:
 
         for i in range(iterations):
             puk = np.pad(uk, pad_width=1, constant_values=0)#padded uk
-
             uk=(
                 (1-tau*sum(np.sqrt(w*pw[j])for j in neighbourslices))*uk
                 +tau*sum(np.sqrt(w*pw[j])*puk[j]for j in neighbourslices)#u_k=u_(k+1)
                 +(tau/lambd**2)*f
                 )/(1+tau/lambd**2)
         u = uk
+
+
+
+
+
         # "energy" outside, inside
         in_mask, out_mask = (mask==2),(mask==0)
         grad_x, grad_y = np.gradient(u)
         e = (f - u) ** 2+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
         e_p=(e*out_mask)
-        e_m=(e*in_mask) 
-        return mask, u, e_p, e_m
+        e_m=(e*in_mask)
+
+        # "energy" outside, inside
+        # in_mask, out_mask = (mask==2),(mask==0)
+        # u_in, u_out = u*in_mask, u*out_mask
+
+        # grad_x, grad_y = np.gradient(u)
+        # grad_x_out, grad_y_out = grad_x*out_mask, grad_y*out_mask # np.gradient(u_in)
+        # grad_x_in,  grad_y_in  = grad_x*in_mask,  grad_y*in_mask # np.gradient(u_out)
+
+        # grad_x_out, grad_y_out =  np.gradient(u_out)
+        # grad_x_in,  grad_y_in  =  np.gradient(u_in)
+        
+        # e_p = (f*out_mask - u_out)**2 # + lambd**2 * (grad_x_out**2 + grad_y_out**2)
+        # e_m = (f*in_mask  - u_in )**2 # + lambd**2 * (grad_x_in**2  + grad_y_in**2)
+
+        return mask, u, e_p, e_m    # XXX e_p, e_m sind falsch rum ...
 
     def step(self):
         r""" Let Diffusion Snake performce a single iteration

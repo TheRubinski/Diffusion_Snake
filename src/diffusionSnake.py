@@ -2,6 +2,7 @@ import numpy as np
 from src.cicleBspline import Spline
 from skimage import io, color
 from matplotlib import pyplot as plt
+from scipy.ndimage import convolve
 
 
 def error(f,u,C,lambd,v):
@@ -67,7 +68,7 @@ class DiffusionSnake:
             self.optimizer_range = range(0,20)  #.. range random
         elif mode == "full":   
             self.u_func = self.u_e_full
-            self.optimizer_range = range(4,30)  #.. 
+            self.optimizer_range = range(0,20)  #.. 
         else:                  
             raise(NameError("Mode has to be 'full' or 'simple'"))
 
@@ -90,6 +91,7 @@ class DiffusionSnake:
         # "energy" outside, inside
         e_p = (f*out_mask - u_out)**2
         e_m = (f*in_mask  - u_in )**2
+        # print(mask.shape, u.shape, e_p.shape, e_m.shape)
         return mask, u, e_p, e_m
 
 
@@ -104,50 +106,48 @@ class DiffusionSnake:
         """
         f, spline, uk, lambd, tau, iterations = self.f, self.C, self.u, self.lambd, self.tau, self.u_iterations   
 
-        mask,*_=spline.draw(np.zeros(f.shape,np.uint8),drawinside=False,steps=200)
+        mask,*_=spline.draw(np.zeros(f.shape,np.uint8),steps=200)
         # w= mask!=1
         in_mask, out_mask, spline_mask = (mask==2),(mask==0),(mask==1)
         w = spline_mask!=1
-        
-        pw = np.pad(w, pad_width=1, constant_values=0)
-        
-        smid=slice(1,-1);sup=slice(2,None);sdown=slice(None,-2)
-        neighbourslices=[(sup,smid),(sdown,smid),(smid,sup),(smid,sdown)]
 
+        pw = np.pad(w, pad_width=1, constant_values=0)
+        smid=slice(1,-1);sup=slice(2,None);sdown=slice(None,-2)            
+        neighbourslices=[(sup,smid),(sdown,smid),(smid,sup),(smid,sdown)]    # drunter, drüber, rechts, links
         for i in range(iterations):
             puk = np.pad(uk, pad_width=1, constant_values=0)#padded uk
             uk=(
-                (1-tau*sum(np.sqrt(w*pw[j])for j in neighbourslices))*uk
-                +tau*sum(np.sqrt(w*pw[j])*puk[j]for j in neighbourslices)#u_k=u_(k+1)
+                (1-tau*
+                 sum(       #np.sqrt
+                     (w*pw[j])   for j in neighbourslices)
+                 )*uk
+                +tau*
+                 sum(       #np.sqrt
+                     (w*pw[j]) * puk[j] for j in neighbourslices)      #u_k=u_(k+1)
                 +(tau/lambd**2)*f
-                )/(1+tau/lambd**2)
+                )/(1 + tau/lambd**2)
         u = uk
-
-
-
-
+        
 
         # "energy" outside, inside
-        in_mask, out_mask = (mask==2),(mask==0)
-        grad_x, grad_y = np.gradient(u)
-        e = (f - u) ** 2+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
-        e_p=(e*out_mask)
-        e_m=(e*in_mask)
-
-        # "energy" outside, inside
-        # in_mask, out_mask = (mask==2),(mask==0)
-        # u_in, u_out = u*in_mask, u*out_mask
-
         # grad_x, grad_y = np.gradient(u)
-        # grad_x_out, grad_y_out = grad_x*out_mask, grad_y*out_mask # np.gradient(u_in)
-        # grad_x_in,  grad_y_in  = grad_x*in_mask,  grad_y*in_mask # np.gradient(u_out)
+        # e = (f - u) ** 2+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
+        # e_p=(e*out_mask)
+        # e_m=(e*in_mask)
+
+        u_out, u_in = u*out_mask, u*in_mask
+
+        grad_x, grad_y = np.gradient(u)
+        grad_x_out, grad_y_out = grad_x*out_mask, grad_y*out_mask
+        grad_x_in,  grad_y_in  = grad_x*in_mask,  grad_y*in_mask 
 
         # grad_x_out, grad_y_out =  np.gradient(u_out)
         # grad_x_in,  grad_y_in  =  np.gradient(u_in)
         
-        # e_p = (f*out_mask - u_out)**2 # + lambd**2 * (grad_x_out**2 + grad_y_out**2)
-        # e_m = (f*in_mask  - u_in )**2 # + lambd**2 * (grad_x_in**2  + grad_y_in**2)
-
+        e_p = (f*out_mask - u_out)**2 + lambd**2 * (grad_x_out**2 + grad_y_out**2)
+        e_m = (f*in_mask  - u_in )**2 + lambd**2 * (grad_x_in**2  + grad_y_in**2)
+        print("e_p: ", np.min(e_p), np.max(e_p)) # XXX e_p:  0.0 12.5
+        print("e_m: ", np.min(e_m), np.max(e_m)) # XXX e_m:  0.0 0.0 --> stays 0, 0 die ganze zeit ....
         return mask, u, e_p, e_m    # XXX e_p, e_m sind falsch rum ...
 
     def step(self):
@@ -195,7 +195,9 @@ class DiffusionSnake:
 
         self.C.set_c(c_new)
         self.u = u
-        return em
+
+        in_mask, out_mask, spline_mask = (mask==2),(mask==0),(mask==1)
+        return in_mask
     
 
     def draw(self):

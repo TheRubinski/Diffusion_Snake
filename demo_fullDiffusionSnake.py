@@ -7,16 +7,17 @@ from src.diffusionSnake import DiffusionSnake
 
 
 # Config
-image_path = './sample_images/snail1_gray.png'
+image_path = './sample_images/rect_1.png' # snail1.png'
 # n_steps = 1000  # max iterations  # TODO: implement
 # eps = 1e-4      # for convergence # TODO: implement
-lambd, v= 1, 0.1  # Parameters for Diffusion Snake. labda is not needed for simple mode
-n_points = 100  # number of controllpoints for spline
-alph=0.9        # learning rate 
-
+lambd, v= 5, 0.001  # Parameters for Diffusion Snake. labda is not needed for simple mode
+n_points = 20  # number of controllpoints for spline
+alph=0.1        # learning rate 
+u_iter=4
+tau=0.25
 
 # Setup
-ds = DiffusionSnake(image_path, v, n_points, alph, mode="full", lambd=lambd, u_iterations=1)
+ds = DiffusionSnake(image_path, v, n_points, alph, mode="full", lambd=lambd, u_iterations=u_iter, tau=tau)
 u,x,y=ds.draw()
 
 
@@ -43,8 +44,6 @@ def animate(frame):
 
     ds.step()
     u,x,y=ds.draw()
-    print(np.min(u), np.max(u)) # (0.5, 1) vs. (0,1) for simple
-
     uplt.set_array(u.T)#ds.f.T)
     Cplt.set_data(x,y)
     #cplt.set_data(*ds.C.spline(np.linspace(0,1,100)).T) # plot controllpoints
@@ -53,7 +52,7 @@ def animate(frame):
     return[uplt,Cplt,print_step]#,cplt]
 
 animate(0)
-animate(1)
+#animate(1)
 plt.pause(0.5)
 anim = animation.FuncAnimation(fig, animate, interval=10,cache_frame_data=False,blit=True)
 plt.show()

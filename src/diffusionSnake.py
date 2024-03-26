@@ -35,17 +35,22 @@ class DiffusionSnake:
         or the simplified Functional at the catoon limit(p.20, 2.13), if mode is "simple"
         by performing a gradient decent step on each step-call
     """    
-    def __init__(self, image_path, lambd, v, n_points, alpha, mode="full"):
+    def __init__(self, image_path, v, n_points, alpha, mode="full", lambd=2, tau=0.25, u_iterations=1):
         r"""Init function
             #Args:
-                image_path:
-                lambd: 
-                v:
+                image_path: the image-volume to segment
+                v: Determines how much the length of the spline is penalized
                 n_points: number of controllpoints for spline
                 alpha: learning rate for gradient decent
-                mode: "full" or "simple". Use full Munford-Shah Functional for Minimization, if mode is "full".
-                    Use simplified Functional at the catoon limit, if mode is "simple"
+                mode: "full" or "simple". Use full Munford-Shah Functional for Minimization, if mode is "full". 
+                Use simplified Functional at the catoon limit, if mode is "simple"
+                --- Only for full mode ---
+                lambd: Blur-factor for u-function
+                tau: tau > 0.25 leads to instability
+                u_iterations: Determines how strongly u is adapted to the new curve in each step
         """
+        assert(tau <= 0.25)
+
         self.f = readimageasnp(image_path)
         self.u = self.f
 
@@ -55,7 +60,7 @@ class DiffusionSnake:
         self.B=self.C.designmatrix(wrap=True)
         self.Binv=np.linalg.inv(self.B)
 
-        self.lambd, self.v, self.alpha = lambd, v, alpha
+        self.lambd, self.v, self.alpha, self.tau, self.u_iterations = lambd, v, alpha, tau, u_iterations
 
         if mode == "simple": 
             self.u_func = self.u_e_simple
@@ -67,9 +72,16 @@ class DiffusionSnake:
             raise(NameError("Mode has to be 'full' or 'simple'"))
 
 
-    def u_e_simple(self, f, spline):
+    def u_e_simple(self):
+        r""" Computes the e and u part for the simplyfied diffusion snake (p.20, 2.13)
+        #Args:
+            f: the image-volume
+            spline: current spline
+        """
+        f, spline = self.f, self.C
+
         mask,*_=spline.draw(f,steps=200)
-        in_mask, out_mask, _ = (mask==2),(mask==0),(mask==1)
+        in_mask, out_mask = (mask==2),(mask==0)
 
         u_in, u_out = in_mask.astype(float), out_mask.astype(float),
         u_in *= np.sum(f*in_mask) / np.sum(in_mask) 
@@ -81,10 +93,16 @@ class DiffusionSnake:
         return mask, u, e_p, e_m
 
 
-    def u_e_full(self, f,spline): #u=None) #lambd=10,tau=0.25,iterations=1):
-        uk, lambd = self.u, self.lambd
-        tau=0.25; iterations=4
-
+    def u_e_full(self):#, f, spline, tau=0.25, iterations=1, **kwargs):
+        r""" Computes the e and u part for the full diffusion snake (p.19, 2.11)
+        #Args:
+            f: the image-volume
+            spline: current spline
+            lambd: Blur-factor
+            tau: tau > 0.25 leads to instability
+            iterations: bestimmt, wie stark u in jedem step an die neue kurve angepasst wird
+        """
+        f, spline, uk, lambd, tau, iterations = self.f, self.C, self.u, self.lambd, self.tau, self.u_iterations   
 
         mask,*_=spline.draw(np.zeros(f.shape,np.uint8),drawinside=False,steps=200)
         w=mask!=1
@@ -103,16 +121,18 @@ class DiffusionSnake:
                 )/(1+tau/lambd**2)
         u = uk
         # "energy" outside, inside
+        in_mask, out_mask = (mask==2),(mask==0)
         grad_x, grad_y = np.gradient(u)
         e = (f - u) ** 2+lambd ** 2 * (grad_x ** 2 + grad_y ** 2)
-        e_p=e
-        e_m=e
+        e_p=(e*out_mask)
+        e_m=(e*in_mask) 
         return mask, u, e_p, e_m
 
     def step(self):
         r""" Let Diffusion Snake performce a single iteration
         """
-        mask, u, ep, em = self.u_func(self.f,self.C)    # depend on mode simple or full
+        mask, u, ep, em = self.u_func() #(self.f,self.C)    # depend on mode simple or full
+
         x=self.C.xbmax() #compute best x
 
         #compute normals and nodes
@@ -144,9 +164,10 @@ class DiffusionSnake:
                 x,y=si.astype(int)
                 esiminus[i]=em[x,y]
 
+        ep, em = esiplus, esiminus
         
         gradients=np.zeros(s.shape)
-        sumterm=(esiplus-esiminus)[:,None]*normals + self.v*(np.roll(s, 1,axis=0)-2*s+np.roll(s, -1,axis=0))
+        sumterm=(ep-em)[:,None]*normals + self.v*(np.roll(s, 1,axis=0)-2*s+np.roll(s, -1,axis=0))
         gradients=np.dot(self.Binv, sumterm)
         c_new=self.C.c+gradients*self.alpha
 
@@ -182,11 +203,3 @@ class DiffusionSnake:
         points=y
 
         self.C.setpoints(points)
-
-
-
-
-    def get_controlpoints(self):
-        r"""
-        #Returns: current controllpoints. For Plotting/Debugging"""
-    

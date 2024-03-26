@@ -8,15 +8,15 @@ from src.diffusionSnake import DiffusionSnake
 
 # Config
 image_path = './sample_images/snail1_gray.png'
-n_steps = 1000  # max iterations
-eps = 1e-4      # for convergence
-lambd, v=5,0.1  # Parameters for Diffusion Snake. labda is not needed for simple mode
+# n_steps = 1000  # max iterations  # TODO: implement
+# eps = 1e-4      # for convergence # TODO: implement
+lambd, v=2,0.1  # Parameters for Diffusion Snake. labda is not needed for simple mode
 n_points = 100  # number of controllpoints for spline
-alph=0.7        # learning rate 
+alph=1        # learning rate 
 
 
 # Setup
-ds = DiffusionSnake(image_path, lambd, v, n_points, alph, mode="full")
+ds = DiffusionSnake(image_path, v, n_points, alph, mode="full", lambd=lambd)
 u,x,y=ds.draw()
 
 
@@ -26,27 +26,30 @@ fig=plt.figure()
 uplt=plt.imshow(u)
 Cplt,=plt.plot(x,y,"-b")
 print_step = plt.text(1,5,"Step: 0")
-#cplt,=plt.plot(*controllpoints.T,"or")
+cplt,=plt.plot(*ds.C.c.T,"or")          # plot controllpoints
 
 delta_w_neu=0
 step=0
 
 
 def animate(frame):
-    global u,C,step, print_step,controllpoints
+    global u,C,step,print_step
     # if step == n_steps: # XXX Maybe use pauseResume.py for this
 
     print_step.set_text(f"Step: {step}") # = plt.text(1,5,"Step: "+str(step))
 
+    if step%100==0:
+        ds.respacepoints()
+
     ds.step()
     u,x,y=ds.draw()
 
-    uplt.set_array(ds.f.T)
+    uplt.set_array(u.T)#ds.f.T)
     Cplt.set_data(x,y)
-    #cplt.set_data(*controllpoints.T)
+    cplt.set_data(*ds.C.spline(np.linspace(0,1,100)).T) # plot controllpoints
 
     step += 1
-    return[uplt,Cplt,print_step]
+    return[uplt,Cplt,print_step,cplt]
 
 animate(0)
 animate(1)

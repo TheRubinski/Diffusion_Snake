@@ -174,7 +174,7 @@ class DiffusionSnake:
         normalized_distances = np.insert(cumulative_distances / cumulative_distances[-1], 0, 0)
         dists=normalized_distances
 
-        x=np.linspace(0, 1, 100,endpoint=False)
+        x=np.linspace(0, 1, len(self.C.points),endpoint=False)
         index=np.searchsorted(dists,x)
         x0,x1=dists[index-1],dists[index]
         y0,y1=curve_points[index-1],curve_points[index]

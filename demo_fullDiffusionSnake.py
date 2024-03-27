@@ -19,9 +19,9 @@ import time
 
 # # Config - Example Two: Converges somehow stable in 400 steps
 image_path = './sample_images/snail1.png' # snail1.png'
-lambd, v= 7, 0.1  # Parameters for Diffusion Snake
+lambd, v= 3, 0.03  # Parameters for Diffusion Snake
 n_points = 50  # number of controllpoints for spline
-alph=0.2        # learning rate 
+alph=0.3        # learning rate 
 u_iter=12
 tau=0.25
 

@@ -3,7 +3,7 @@ from src.cicleBspline import Spline
 from skimage import io, color
 from matplotlib import pyplot as plt
 from scipy.ndimage import convolve
-
+from scipy.ndimage.filters import gaussian_filter
 
 def error(f,u,C,lambd,v):
     futerm=0.5*np.sum((f-u)**2)
@@ -129,12 +129,15 @@ class DiffusionSnake:
                 +(tau/lambd**2)*f
                 )/(1 + tau/lambd**2)
         u = uk
+        #u=gaussian_filter(u,0.1)
         
         # "energy" outside, inside (2.26)
         u_out, u_in = u*out_mask, u*in_mask
         grad_x, grad_y = np.gradient(u)
         grad_x_out, grad_y_out = grad_x*out_mask, grad_y*out_mask
         grad_x_in,  grad_y_in  = grad_x*in_mask,  grad_y*in_mask 
+        #grad_x_out, grad_y_out = np.gradient(u_out)
+        #grad_x_in,  grad_y_in  = np.gradient(u_in)
 
         e_p = (f*out_mask - u_out)**2 + lambd**2 * (grad_x_out**2 + grad_y_out**2)
         e_m = (f*in_mask  - u_in )**2 + lambd**2 * (grad_x_in**2  + grad_y_in**2)
@@ -190,7 +193,7 @@ class DiffusionSnake:
         self.n_step+=1
 
         # respace points
-        if self.respace and self.n_step%100==0:
+        if self.respace and self.n_step%20==0:
             self.respacepoints()
     
 

@@ -34,7 +34,7 @@ cplt,=plt.plot(*ds.C.c.T,"or")          # plot controllpoints
 def animate(frame):
     print_step.set_text(f"Step: {ds.n_step}")
     
-    for i in range(10):
+    for i in range(10):#ca 5x speedup
         ds.step()
     u,x,y=ds.draw()
 

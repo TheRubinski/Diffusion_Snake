@@ -12,39 +12,30 @@ from src.diffusionSnake import DiffusionSnake
 # n_points = 100        # number of controllpoints for spline
 # alph=0.9              # learning rate
 
+# Config
 image_path = './sample_images/snail1_gray.png'
-# n_steps = 1000  # max iterations  # TODO
-# eps = 1e-4      # for convergence  # TODO
 v = 0.01
 n_points = 100  # number of controllpoints for spline
 alph=0.9        # learning rate 
 
 # Setup
-ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple")
+ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple", respace=True)
 u,x,y=ds.draw()
 
 # Plot/ Animate
 from matplotlib import animation
 fig=plt.figure()
-uplt=plt.imshow(u)#, vmin= 0, vmax=0.1)
+uplt=plt.imshow(u)
 Cplt,=plt.plot(x,y,"-b")
-print_step = plt.text(1,5,"Step: 0")
+print_step = plt.text(.05, .99, "Step: 0", ha='left', va='top')
 cplt,=plt.plot(*ds.C.c.T,"or")          # plot controllpoints
-
-# delta_w_neu=0
-step=0
 
 
 def animate(frame):
     global u,C,step,print_step
-    # if step == n_steps: # XXX Maybe use pauseResume.py for this
-
-    print_step.set_text(f"Step: {step}") # = plt.text(1,5,"Step: "+str(step))
+    print_step.set_text(f"Step: {ds.n_step}")
     
-    if step%100==0:
-        ds.respacepoints()
-
-    e_p = ds.step()
+    ds.step()
     u,x,y=ds.draw()
 
     uplt.set_array(u.T * ds.f.T)

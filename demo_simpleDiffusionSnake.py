@@ -32,17 +32,17 @@ cplt,=plt.plot(*ds.C.c.T,"or")          # plot controllpoints
 
 
 def animate(frame):
-    global u,C,step,print_step
     print_step.set_text(f"Step: {ds.n_step}")
     
-    ds.step()
+    for i in range(10):
+        ds.step()
     u,x,y=ds.draw()
 
     uplt.set_array(u.T * ds.f.T)
     Cplt.set_data(x,y)
     cplt.set_data(*ds.C.spline(np.linspace(0,1,100)).T) # plot controllpoints
 
-    step += 1
+
     return[uplt,Cplt,print_step,cplt]
 
 animate(0)

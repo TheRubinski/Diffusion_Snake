@@ -29,7 +29,7 @@ u_iter=6
 tau=0.25
 
 # Config - Example Two: Converges somehow stable in 400 steps
-image_path = './sample_images/rect_1.png'
+image_path = './sample_images/artificial/100/rect_1.png'
 lambd, v= 7, 0.1  # Parameters for Diffusion Snake
 n_points = 50  # number of controllpoints for spline
 alph=0.2        # learning rate 
@@ -48,17 +48,6 @@ uplt=plt.imshow(u)
 Cplt,=plt.plot(x,y,"-b")
 print_step = plt.text(.05, .99, "Step: 0", ha='left', va='top')
 #cplt,=plt.plot(*ds.C.c.T,"or")          # plot controllpoints
-
-
-import cProfile, pstats, io
-pr = cProfile.Profile()
-pr.enable()
-for i in range(1000):
-    #print(i)
-    ds.step()
-pr.disable()
-
-print(pstats.Stats(pr).sort_stats('tottime').print_stats(20))
 
 
 

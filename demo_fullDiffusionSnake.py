@@ -6,6 +6,9 @@ from matplotlib import pyplot as plt
 from src.diffusionSnake import DiffusionSnake
 import time
 
+
+
+
 # n_steps = 1000  # max iterations  # TODO: implement
 # eps = 1e-4      # for convergence # TODO: implement
 
@@ -22,7 +25,7 @@ image_path = './sample_images/snail1.png' # snail1.png'
 lambd, v= 3, 0.03  # Parameters for Diffusion Snake
 n_points = 50  # number of controllpoints for spline
 alph=0.3        # learning rate 
-u_iter=12
+u_iter=6
 tau=0.25
 
 # Config - Example Two: Converges somehow stable in 400 steps
@@ -46,6 +49,19 @@ Cplt,=plt.plot(x,y,"-b")
 print_step = plt.text(.05, .99, "Step: 0", ha='left', va='top')
 #cplt,=plt.plot(*ds.C.c.T,"or")          # plot controllpoints
 
+
+import cProfile, pstats, io
+pr = cProfile.Profile()
+pr.enable()
+for i in range(1000):
+    #print(i)
+    ds.step()
+pr.disable()
+
+print(pstats.Stats(pr).sort_stats('tottime').print_stats(20))
+
+
+
 delta_w_neu=0
 step=0
 def animate(frame):
@@ -58,10 +74,16 @@ def animate(frame):
     #cplt.set_data(*ds.C.spline(np.linspace(0,1,100)).T) # plot controllpoints
 
 
-    return[uplt,Cplt,print_step]#,cplt]
+    return [uplt,Cplt,print_step]#,cplt]
 
+
+
+print("????")
 animate(0)
 animate(1)
 plt.pause(0.5)
 anim = animation.FuncAnimation(fig, animate, interval=1,cache_frame_data=False,blit=True)
+
 plt.show()
+# ... do something ...
+

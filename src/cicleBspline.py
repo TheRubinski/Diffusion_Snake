@@ -94,38 +94,7 @@ class Spline:
     def get_masks(self,canvas=None,steps=1000):
         canvas,*_=self.draw(canvas,steps)
         return (canvas==2),(canvas==0),(canvas==1)
-        #return (canvas==2).astype(int),(canvas==0).astype(int),(canvas==1).astype(int)
-        #return in_mask, out_mask, spline_mask
-
-        if canvas is None:
-            in_mask = np.zeros((100, 100), int)
-        else:
-            in_mask = np.zeros((canvas.shape), int)
-        spline_mask = np.copy(in_mask)
-
-        xi,yi = self.spline(np.linspace(0, 1, steps)).T
-        px,py=xi[:-1],yi[:-1]
-        rr, cc = polygon(px,py, in_mask.shape)               # in + also some on spline
-        in_mask[cc,rr] = 1
-        rr, cc = polygon_perimeter(px,py, in_mask.shape)     # only spline curve
-        spline_mask[cc,rr] = 1
-        in_mask = np.logical_and(in_mask, np.logical_not(spline_mask))  # remove elements also in spline 
-        out_mask = np.logical_not(np.logical_or(in_mask, spline_mask))
-        return in_mask, out_mask, spline_mask
     
-    def get_2masks(self,canvas=None,steps=1000):
-        if canvas is None:
-            in_mask = np.zeros((100, 100), int)
-        else:
-            in_mask = np.zeros((canvas.shape), int)
-
-        xi,yi = self.spline(np.linspace(0, 1, steps)).T
-        px,py=xi[:-1],yi[:-1]
-        rr, cc = polygon(px,py, in_mask.shape)               # in + also some on spline
-        in_mask[cc,rr] = 1
-
-        out_mask = np.logical_not(in_mask)
-        return in_mask, out_mask
     
     def normals(self, x=None):#point outside
         if x is None:

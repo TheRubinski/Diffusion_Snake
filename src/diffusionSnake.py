@@ -1,9 +1,7 @@
 import numpy as np
 from src.cicleBspline import Spline
 from skimage import io, color
-from matplotlib import pyplot as plt
-from scipy.ndimage import convolve
-from scipy.ndimage.filters import gaussian_filter
+
 
 def error(f,u,C,lambd,v):
     futerm=0.5*np.sum((f-u)**2)
@@ -26,7 +24,7 @@ def generate_points_in_circle(num_points,radius=1,center=[(0,0)]):
 
 def readimageasnp(image_path):
     image = io.imread(image_path)
-    f = color.rgb2gray(image)
+    f = color.rgb2gray(image).T
     return f
 
 
@@ -67,10 +65,10 @@ class DiffusionSnake:
 
         if mode == "simple": 
             self.u_func = self.u_e_simple
-            self.si_range = range(0,20)  #.. range random
+            self.si_range = range(0,20)  #range random
         elif mode == "full":   
             self.u_func = self.u_e_full
-            self.si_range = range(4,20)  #.. 
+            self.si_range = range(4,20)  #.. # do not start at 0, becaus discontinuity mess up gradient 
         else:                  
             raise(NameError("Mode has to be 'full' or 'simple'"))
 
@@ -129,15 +127,12 @@ class DiffusionSnake:
                 +(tau/lambd**2)*f
                 )/(1 + tau/lambd**2)
         u = uk
-        #u=gaussian_filter(u,0.1)
         
         # "energy" outside, inside (2.26)
         u_out, u_in = u*out_mask, u*in_mask
         grad_x, grad_y = np.gradient(u)
         grad_x_out, grad_y_out = grad_x*out_mask, grad_y*out_mask
         grad_x_in,  grad_y_in  = grad_x*in_mask,  grad_y*in_mask 
-        #grad_x_out, grad_y_out = np.gradient(u_out)
-        #grad_x_in,  grad_y_in  = np.gradient(u_in)
 
         e_p = (f*out_mask - u_out)**2 + lambd**2 * (grad_x_out**2 + grad_y_out**2)
         e_m = (f*in_mask  - u_in )**2 + lambd**2 * (grad_x_in**2  + grad_y_in**2)
@@ -161,27 +156,27 @@ class DiffusionSnake:
         esiminus=np.zeros(N)#inside
         for i,(si,ni) in enumerate(zip(s,normals)):
             for d in self.si_range:
-                x,y=(si+ni*d/2).astype(int)
-                if mask[x,y]==0:        # if reached oudside
+                x,y=self.inbounds(*(si+ni*d/2).astype(int))
+                if mask[x,y]==0:        # if reached outside
                     esiplus[i]=ep[x,y]
                     break
             else:                       # fall-back-case: This is reached sometimes depending on hyperparameters, input-image, state of convergence and self.si_range
                 # print(":(")
-                x,y=si.astype(int)
+                x,y=self.inbounds(*si.astype(int))
                 esiplus[i]=ep[x,y]
             for d in self.si_range:               
-                x,y=(si-ni*d/2).astype(int)
+                x,y=self.inbounds(*(si-ni*d/2).astype(int))
                 if mask[x,y]==2:        # if reached inside
                     esiminus[i]=em[x,y]
                     break
             else:                       # fall-back-case
                 # print(":(")
-                x,y=si.astype(int)
+                x,y=self.inbounds(*si.astype(int))
                 esiminus[i]=em[x,y]
 
         ep, em = esiplus, esiminus
         
-        # 
+        # gradients
         gradients=np.zeros(s.shape)
         sumterm=(ep-em)[:,None]*normals + self.v*(np.roll(s, 1,axis=0)-2*s+np.roll(s, -1,axis=0))
         gradients=np.dot(self.Binv, sumterm)
@@ -196,6 +191,10 @@ class DiffusionSnake:
         if self.respace and self.n_step%20==0:
             self.respacepoints()
     
+    def inbounds(self, x, y):
+        x = min(self.f.shape[0]-1, x)
+        y = min(self.f.shape[1]-1, y)
+        return x, y
 
     def draw(self):
         r"""Draws the current Diffusion Snake on a pixel-plane of initial input image size
@@ -204,6 +203,8 @@ class DiffusionSnake:
             x, y: The coordinates of the 
         """
         _, x, y = self.C.draw(np.zeros(self.f.shape,np.uint8), steps=1000)
+        x -= 0.5    # spline offset for visualisation
+        y -= 0.5
 
         return self.u, x, y
     

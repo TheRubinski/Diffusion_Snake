@@ -6,7 +6,7 @@ from skimage import io, color
 def error(f,u,C,lambd,v):
     futerm=0.5*np.sum((f-u)**2)
 
-    mask,*_=C.draw(np.zeros(f.shape,np.uint8),drawinside=False,steps=200)
+    mask=C.get_mask(f.shape,steps=200)
     du_dx, du_dy = np.gradient(u)
     duterm = lambd**2*0.5*np.sum((du_dx**2 + du_dy**2)*(mask!=1))
 
@@ -82,7 +82,7 @@ class DiffusionSnake:
         """
         f, spline = self.f, self.C
 
-        mask,*_=spline.draw(f,steps=200)
+        mask=spline.get_mask(f.shape,steps=200)
         in_mask, out_mask = (mask==2),(mask==0) # inside/outside spline without pixels on spline
         
         # u_in/u_out is average of eacch region
@@ -107,7 +107,7 @@ class DiffusionSnake:
         """
         f, spline, uk, lambd, tau, iterations = self.f, self.C, self.u, self.lambd, self.tau, self.u_iterations   
 
-        mask,*_=spline.draw(np.zeros(f.shape,np.uint8),steps=200)
+        mask=spline.get_mask()
         in_mask, out_mask, spline_mask = (mask==2),(mask==0),(mask==1)  # inside/outside spline without pixels on spline and only pixels on spline
         w = spline_mask!=1                                              # pixels not on spline
 
@@ -202,7 +202,7 @@ class DiffusionSnake:
             mask: 
             x, y: The coordinates of the 
         """
-        _, x, y = self.C.draw(np.zeros(self.f.shape,np.uint8), steps=1000)
+        x, y = self.C.draw(self.f.shape, steps=1000)
         return self.u, x, y
     
     def respacepoints(self,steps=1000):

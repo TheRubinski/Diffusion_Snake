@@ -11,7 +11,7 @@ from src.diffusionSnake import DiffusionSnake
 # alph=0.9              # learning rate
 
 # Config
-image_path = './sample_images/artificial/100/rect_1.png'#snail1_gray.png'
+image_path = './sample_images/artificial/100/rect_1.png'
 v = 0.01
 n_points = 100  # number of controllpoints for spline
 alph=0.2        # learning rate 

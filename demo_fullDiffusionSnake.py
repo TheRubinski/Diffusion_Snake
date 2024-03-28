@@ -6,6 +6,9 @@ from matplotlib import pyplot as plt
 from src.diffusionSnake import DiffusionSnake
 import time
 
+
+
+
 # n_steps = 1000  # max iterations  # TODO: implement
 # eps = 1e-4      # for convergence # TODO: implement
 
@@ -15,7 +18,7 @@ image_path = './sample_images/artificial/100/rect_1.png'
 lambd, v= 3, 0.03  # Parameters for Diffusion Snake
 n_points = 50  # number of controllpoints for spline
 alph=0.3        # learning rate 
-u_iter=12
+u_iter=6
 tau=0.25
 
 
@@ -36,6 +39,11 @@ image_path = './sample_images/real/300/bee.png'             # working
 lambd, v= 15, 0.01  # Parameters for Diffusion Snake
 n_points = 100  # number of controllpoints for spline
 alph=0.9        # learning rate 
+# Config - Example Two: Converges somehow stable in 400 steps
+image_path = './sample_images/artificial/100/rect_1.png'
+lambd, v= 7, 0.1  # Parameters for Diffusion Snake
+n_points = 50  # number of controllpoints for spline
+alph=0.2        # learning rate 
 u_iter=12
 tau=0.25
 
@@ -78,6 +86,7 @@ def animate(frame):
     C2plt.set_data(x,y)
     return[uplt,Cplt,C2plt,print_step,a1,a2]
 
+print("????")
 animate(0)
 animate(1)
 plt.pause(0.5)

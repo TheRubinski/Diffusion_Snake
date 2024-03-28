@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import interpolate
 from skimage.draw import polygon,polygon_perimeter
-
+from PIL import Image, ImageDraw
 
 class Spline:
     def __init__(self, points=None, k=3,*,c=None):
@@ -76,25 +76,25 @@ class Spline:
         else:
             return 0#"Collinear"
 
-    def draw(self,canvas=None,steps=1000,drawinside=True):
-        if canvas is None:
-            canvas = np.zeros((100, 100), int)
-        else:
-            canvas = np.zeros((canvas.shape), int)
-        xi,yi = self.spline(np.linspace(0, 1, steps)).T
+    def draw(self,shape=None,steps=1000,closed=True):
+        xi,yi = self.spline(np.linspace(0, 1, steps,endpoint=closed)).T
+        return xi,yi
+    
+    def get_mask(self,shape=None,steps=1000):
+        #canvas,*_=self.draw(canvas,steps)
+        if shape is None:
+            shape=(100,100)
+        polygon=self.spline(np.linspace(0, 1, steps))
+        img = Image.new('L', shape, 0)
+        draw=ImageDraw.Draw(img)
+        draw.polygon(list(polygon.flatten()), outline=1, fill=2)
+        mask = np.array(img)
+        return mask.T
+    
+    def get_masks(self,shape=None,steps=1000):
+        mask=self.get_mask(shape,steps)
+        return (mask==2),(mask==0),(mask==1)
 
-        px,py=xi[:-1],yi[:-1]
-        if drawinside:
-            rr, cc = polygon(px,py, canvas.shape)
-            canvas[rr,cc] = 2
-        rr, cc = polygon_perimeter(px,py, canvas.shape)
-        canvas[rr,cc] = 1
-        return canvas,xi,yi
-    
-    def get_masks(self,canvas=None,steps=1000):
-        canvas,*_=self.draw(canvas,steps)
-        return (canvas==2),(canvas==0),(canvas==1)
-    
     
     def normals(self, x=None):#point outside
         if x is None:
@@ -137,7 +137,8 @@ if __name__=="__main__":
         
         
         spline=Spline(points)
-        img,xi,yi=spline.draw(steps=1000)
+        xi,yi=spline.draw(steps=1000)
+        img=spline.get_mask()
 
         #imgin,imgout,imgspline=spline.get_masks()
         #imgin2,imgout2,imgspline2=(img==2),(img==0),(img==1)
@@ -158,7 +159,7 @@ if __name__=="__main__":
 
         return [imgplt,pointsplt,splineplt,normalplt]
 
-
+    animate(0)
     
     anim = animation.FuncAnimation(fig, animate, interval=10,cache_frame_data=False,blit=True)
     plt.show()

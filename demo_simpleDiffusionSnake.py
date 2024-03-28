@@ -32,10 +32,10 @@ cplt,=plt.plot(*ds.C.c.T,"or")          # plot controllpoints
 
 
 def animate(frame):
-    global u,C,step,print_step
     print_step.set_text(f"Step: {ds.n_step}")
     
-    ds.step()
+    for i in range(10):#ca 5x speedup
+        ds.step()
     u,x,y=ds.draw()
 
     uplt.set_array(u.T * ds.f.T)    # overlay u and f

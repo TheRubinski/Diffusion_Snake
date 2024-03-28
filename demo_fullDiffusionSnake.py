@@ -18,10 +18,10 @@ import time
 # tau=0.2
 
 # # Config - Example Two: Converges somehow stable in 400 steps
-image_path = './sample_images/rect_1.png' # snail1.png'
-lambd, v= 7, 0.4  # Parameters for Diffusion Snake
+image_path = './sample_images/snail1.png' # snail1.png'
+lambd, v= 3, 0.03  # Parameters for Diffusion Snake
 n_points = 50  # number of controllpoints for spline
-alph=0.2        # learning rate 
+alph=0.3        # learning rate 
 u_iter=12
 tau=0.25
 
@@ -49,10 +49,9 @@ print_step = plt.text(.05, .99, "Step: 0", ha='left', va='top')
 delta_w_neu=0
 step=0
 def animate(frame):
-    global u,C,step,print_step
     print_step.set_text(f"Step: {ds.n_step}")
-
-    ds.step()
+    for i in range(10):
+        ds.step()
     u,x,y=ds.draw()
     uplt.set_array(u.T)#ds.f.T)         # overlay u and f
     Cplt.set_data(x,y)
@@ -64,5 +63,5 @@ def animate(frame):
 animate(0)
 animate(1)
 plt.pause(0.5)
-anim = animation.FuncAnimation(fig, animate, interval=10,cache_frame_data=False,blit=True)
+anim = animation.FuncAnimation(fig, animate, interval=1,cache_frame_data=False,blit=True)
 plt.show()

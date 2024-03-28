@@ -1,10 +1,9 @@
 import numpy as np
 from scipy import interpolate
-# Example control points
-
-
-
+import os,sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.cicleBspline import Spline
+# Example control points
 
 
 

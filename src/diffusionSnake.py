@@ -31,7 +31,7 @@ def readimageasnp(image_path):
 class DiffusionSnake:
     r""" Diffusion Snakes for image Segmentation from Creemers 2002 (PHD-Thesis) 
         Minimizing the full Munford-Shah Functional (p.19, 2.11), if mode is "full"
-        or the simplified Functional at the catoon limit(p.20, 2.13), if mode is "simple"
+        or the simplified Functional at the catoon limit (p.20, 2.13), if mode is "simple"
         by performing a gradient decent step on each step-call
     """    
     def __init__(self, image_path, v, n_points, alpha, respace=True, mode="full", lambd=2, tau=0.25, u_iterations=4):
@@ -41,7 +41,7 @@ class DiffusionSnake:
                 v: Determines how much the length of the spline is penalized
                 n_points: number of controllpoints for spline
                 alpha: learning rate for gradient decent
-                respace: if True controllpoints will be respaced equidistant every 100 steps
+                respace: if True controllpoints will be respaced equidistant every 20 steps
                 mode: "full" or "simple". Use full Munford-Shah Functional for Minimization, if mode is "full". 
                 Use simplified Functional at the catoon limit, if mode is "simple"
                 --- Only for full mode ---
@@ -203,9 +203,6 @@ class DiffusionSnake:
             x, y: The coordinates of the 
         """
         _, x, y = self.C.draw(np.zeros(self.f.shape,np.uint8), steps=1000)
-        x -= 0.5    # spline offset for visualisation
-        y -= 0.5
-
         return self.u, x, y
     
     def respacepoints(self,steps=1000):

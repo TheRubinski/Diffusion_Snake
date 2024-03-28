@@ -1,9 +1,6 @@
-# This script shall contain the final demo for presentation in the end ...
-import numpy as np
-from src.cicleBspline import Spline
-from skimage import io, color
 from matplotlib import pyplot as plt
 from src.diffusionSnake import DiffusionSnake
+import numpy as np
 
 
 # XXX Config 1 - working good for demo
@@ -21,7 +18,7 @@ image_path = './sample_images/real/300/hand_1.png'          # somehow working
 image_path = './sample_images/real/100/hand_2.png'          # poorly working, but a hard one, does what it should
 image_path = './sample_images/real/300/hand_2.png'          # poorly working, but a hard one, does what it should
 image_path = './sample_images/real/300/bee.png'             # working good
-
+image_path = './sample_images/real/100/hand_1.png'          # somehow working
 
 v = 0.01
 n_points = 100  # number of controllpoints for spline
@@ -32,26 +29,37 @@ ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple", respace=True)
 u,x,y=ds.draw()
 
 # Plot/ Animate
+f = ds.f
+
 from matplotlib import animation
-fig=plt.figure()
+fig, axes = plt.subplots(1,2)
+plt.subplot(1,2,1)
 uplt=plt.imshow(u)
-Cplt,=plt.plot(x,y,"-b")
 print_step = plt.text(.05, .99, "Step: 0", ha='left', va='top')
-#cplt,=plt.plot(*ds.C.c.T,"or")          # plot controllpoints
+Cplt,=plt.plot(x,y,"-b", label='Spline')
+
+plt.subplot(1,2,2)
+fplt=plt.imshow(f.T)
+C2plt,=plt.plot(x,y,"-b", label='Spline')
+axes[0].set_title('u-function')
+axes[1].set_title('Input Image')
+
+a1=axes[0].legend()
+a2=axes[1].legend()
 
 
 def animate(frame):
-    global u,C,step,print_step
     print_step.set_text(f"Step: {ds.n_step}")
     
-    for i in range(10): ds.step()   # do 10 steps in each frame
+    for i in range(1):# range(10) -> ca 5x speedup
+        ds.step()
     u,x,y=ds.draw()
 
-    uplt.set_array(u.T * ds.f.T)    # overlay u and f
+    #uplt.set_array((u * ds.f).T)         # overlay u and f
+    uplt.set_array(u.T)
     Cplt.set_data(x,y)
-    #cplt.set_data(*ds.C.spline(np.linspace(0,1,100)).T) # plot controllpoints
-
-    return[uplt,Cplt,print_step]#,cplt]
+    C2plt.set_data(x,y)
+    return[uplt,Cplt,C2plt,print_step,a1,a2]
 
 animate(0)
 animate(1)

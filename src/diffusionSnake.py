@@ -63,6 +63,9 @@ class DiffusionSnake:
         self.lambd, self.v, self.alpha, self.tau, self.u_iterations, self.respace = lambd, v, alpha, tau, u_iterations, respace
         self.n_step = 0
 
+        if respace is True: self.respace = 20
+        else: self.respace = respace
+
         if mode == "simple": 
             self.u_func = self.u_e_simple
             self.si_range = range(0,20)  #range random
@@ -188,7 +191,7 @@ class DiffusionSnake:
         self.n_step+=1
 
         # respace points
-        if self.respace and self.n_step%20==0:
+        if self.respace and self.n_step%self.respace==0:
             self.respacepoints()
     
     def inbounds(self, x, y):

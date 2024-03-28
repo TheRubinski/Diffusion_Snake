@@ -147,7 +147,7 @@ if __name__=="__main__":
         #print(imgin2)
 
         splineplt.set_data(xi, yi)
-        imgplt.set_array(img)
+        imgplt.set_array(img.T)
 
         x,y=points.T
         x,y=spline.points.T

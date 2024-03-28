@@ -23,9 +23,7 @@ def generate_points_in_circle(num_points,radius=1,center=[(0,0)]):
 
 
 def readimageasnp(image_path):
-    image = io.imread(image_path)
-    f = color.rgb2gray(image).T
-    return f
+    return io.imread(image_path,as_gray=True).T
 
 
 class DiffusionSnake:

@@ -152,7 +152,7 @@ class DiffusionSnake:
         normals = normals / np.linalg.norm(normals, axis=1)[:,None] # Normalize each row vector
         s=self.C.spline(x)
 
-        # determine si aka the next pixel outside/inside in normal direction
+        # determine e of si aka the next pixel outside/inside spline in normal direction
         N=len(s)#number of points
         esiplus =np.zeros(N)#outside
         esiminus=np.zeros(N)#inside

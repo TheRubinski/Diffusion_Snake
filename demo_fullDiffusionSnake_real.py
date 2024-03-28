@@ -17,21 +17,16 @@ import time
 # u_iter=12
 # tau=0.2
 
-# # Config - Example Two: Converges somehow stable in 400 steps
-image_path = './sample_images/rect_1.png' # snail1.png'
+# # Config - 
+image_path = './sample_images/artificial/100/rect_1.png' # Converges somehow stable in 400 steps
+image_path = './sample_images/artificial/100/snail1.png'
 lambd, v= 7, 0.4  # Parameters for Diffusion Snake
 n_points = 50  # number of controllpoints for spline
 alph=0.2        # learning rate 
 u_iter=12
 tau=0.25
 
-# Config - Example Two: Converges somehow stable in 400 steps
-image_path = './sample_images/rect_1.png'
-lambd, v= 7, 0.1  # Parameters for Diffusion Snake
-n_points = 50  # number of controllpoints for spline
-alph=0.2        # learning rate 
-u_iter=12
-tau=0.25
+
 
 # Setup
 ds = DiffusionSnake(image_path, v, n_points, alph, respace=True, mode="full", lambd=lambd, u_iterations=u_iter, tau=tau)

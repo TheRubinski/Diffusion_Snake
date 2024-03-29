@@ -32,14 +32,15 @@ class DiffusionSnake:
         or the simplified Functional at the catoon limit (p.20, 2.13), if mode is "simple"
         by performing a gradient decent step on each step-call
     """    
-    def __init__(self, image_path, v, n_points, alpha, respace=True, mode="full", lambd=2, tau=0.25, u_iterations=4):
+    def __init__(self, image_path, v, n_points, alpha, respace=True, init_size=0.3, mode="full", lambd=2, tau=0.25, u_iterations=4):
         r"""Init function
             #Args:
                 image_path: the image-volume to segment
                 v: Determines how much the length of the spline is penalized
                 n_points: number of controllpoints for spline
                 alpha: learning rate for gradient decent
-                respace: if True controllpoints will be respaced equidistant every 20 steps
+                respace: bool or int: if True controllpoints will be respaced equidistant every 20 steps. If int, every respace steps
+                init_size: size of initial spline radius in part per input image
                 mode: "full" or "simple". Use full Munford-Shah Functional for Minimization, if mode is "full". 
                 Use simplified Functional at the catoon limit, if mode is "simple"
                 --- Only for full mode ---
@@ -48,12 +49,13 @@ class DiffusionSnake:
                 u_iterations: Determines how strongly u is adapted to the new curve in each step
         """
         assert(tau <= 0.25)
+        assert(init_size <= 1.0 and init_size > 0.0)
 
         self.f = readimageasnp(image_path)
         self.u = self.f
 
         size=np.array(self.f.shape)
-        controllpoints=generate_points_in_circle(n_points,size/3,size/2)+np.random.rand(n_points,2)*1
+        controllpoints=generate_points_in_circle(n_points,size*init_size,size/2)+np.random.rand(n_points,2)*1
         self.C=Spline(c=controllpoints,k=2)
         self.B=self.C.designmatrix(wrap=True)
         self.Binv=np.linalg.inv(self.B)
@@ -86,7 +88,7 @@ class DiffusionSnake:
         mask=spline.get_mask(f.shape,steps=200)
         in_mask, out_mask = (mask==2),(mask==0) # inside/outside spline without pixels on spline
         
-        # u_in/u_out is average of eacch region
+        # u_in/u_out is average of each region
         u_in, u_out = in_mask.astype(float), out_mask.astype(float),
         u_in *= np.sum(f*in_mask) / np.sum(in_mask) 
         u_out*= np.sum(f*out_mask)/ np.sum(out_mask)
@@ -108,7 +110,7 @@ class DiffusionSnake:
         """
         f, spline, uk, lambd, tau, iterations = self.f, self.C, self.u, self.lambd, self.tau, self.u_iterations   
 
-        mask=spline.get_mask()
+        mask=spline.get_mask(shape=f.shape)
         in_mask, out_mask, spline_mask = (mask==2),(mask==0),(mask==1)  # inside/outside spline without pixels on spline and only pixels on spline
         w = spline_mask!=1                                              # pixels not on spline
 
@@ -116,15 +118,9 @@ class DiffusionSnake:
         smid=slice(1,-1);sup=slice(2,None);sdown=slice(None,-2)            
         neighbourslices=[(sup,smid),(sdown,smid),(smid,sup),(smid,sdown)]    # under, over, right, left
         for i in range(iterations):
-            puk = np.pad(uk, pad_width=1, constant_values=0)    #padded uk
-            uk=(
-                (1-tau*
-                 sum(       #np.sqrt
-                     (w*pw[j])   for j in neighbourslices)
-                 )*uk
-                +tau*
-                 sum(       #np.sqrt
-                     (w*pw[j]) * puk[j] for j in neighbourslices)      #u_k=u_(k+1)
+            puk = np.pad(uk, pad_width=1, constant_values=0)    # padded uk
+            uk=((1-tau*sum((w*pw[j]) for j in neighbourslices))*uk          
+                +tau*sum((w*pw[j]) * puk[j] for j in neighbourslices)       # uk=u_(k+1)    # no sqrt see 3.27 but is not needed
                 +(tau/lambd**2)*f
                 )/(1 + tau/lambd**2)
         u = uk

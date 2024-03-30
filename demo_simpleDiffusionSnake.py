@@ -28,9 +28,11 @@ image_path = './sample_images/artificial/100/labyrinth_1.png'     # also good on
 
 # XXX: Parameter einkommentieren
 init_size = 0.2 # else slow in the beginning
-v=0.1
+v=0.01
+image_path= './sample_images/real/300/bee.png'                        # also very good, a little slow in the beginning (300 x 300)                        # XXX: Show
 
-# image_path= './sample_images/real/300/bee.png'                        # also very good, a little slow in the beginning (300 x 300)                        # XXX: Show
+# init_size = 0.2 # else slow in the beginning
+v=0.1
 image_path,n_points = './sample_images/real/300/hand_1.png',400       # hard one, still ok, good in the beginning, deutlich schlechter mit 100  points    # XXX: Show
 image_path,n_points= './sample_images/real/300/hand_2.png',400        # hardest one. Finds darkest area in image, but not only the hand                   # XXX: Show
 

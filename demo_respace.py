@@ -17,7 +17,7 @@ alph=0.9        # learning rate
 # XXX: Vergleich ohne und mit Respacing. Bitte jeweils einkommentieren
 
 ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple", respace=False)        # no respacing. gets slow at 500 steps
-# ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple", respace=150)
+ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple", respace=150)
 
 
 

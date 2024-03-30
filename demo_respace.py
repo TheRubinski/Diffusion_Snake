@@ -8,12 +8,17 @@ from src.diffusionSnake import DiffusionSnake
 # Demo Respace
 # Config
 image_path = './sample_images/artificial/100/snail1.png'
-v = 0.01
-n_points = 50  # number of controllpoints for spline
+v = 0.01        # factor for spline lengths punishment
+n_points = 50   # number of controllpoints for spline
 alph=0.9        # learning rate 
 
-# ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple", respace=False)        # no respacing. gets slow at 500 steps
-ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple", respace=150)
+
+
+# XXX: Vergleich ohne und mit Respacing. Bitte jeweils einkommentieren
+
+ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple", respace=False)        # no respacing. gets slow at 500 steps
+# ds = DiffusionSnake(image_path, v, n_points, alph, mode="simple", respace=150)
+
 
 
 
@@ -32,7 +37,7 @@ Cplt,=plt.plot(x,y,"-b", label='Spline')
 cplt,=plt.plot(*ds.C.c.T,"or", label='controlpoints')          # plot controlpoints
 
 plt.subplot(1,2,2)
-fplt=plt.imshow(f.T, cmap='grey')
+fplt=plt.imshow(f.T, cmap='gray')
 C2plt,=plt.plot(x,y,"-b", label='Spline')
 axes[0].set_title('u-function')
 axes[1].set_title('Input Image')

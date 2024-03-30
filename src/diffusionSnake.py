@@ -28,6 +28,7 @@ def readimageasnp(image_path):
 
 class DiffusionSnake:
     r""" Diffusion Snakes for image Segmentation from Creemers 2002 (PHD-Thesis) 
+        https://cvg.cit.tum.de/_media/spezial/bib/cremers_dissertation.pdf
         Minimizing the full Munford-Shah Functional (p.19, 2.11), if mode is "full"
         or the simplified Functional at the catoon limit (p.20, 2.13), if mode is "simple"
         by performing a gradient decent step on each step-call
@@ -136,7 +137,7 @@ class DiffusionSnake:
         return mask, u, e_p, e_m
 
     def step(self):
-        r""" Let Diffusion Snake performce a single iteration
+        r""" Let Diffusion Snake performce a single iteration p.25 (2.30)
         """
         mask, u, ep, em = self.u_func() # depends on mode simple or full
 

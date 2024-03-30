@@ -20,35 +20,45 @@ tau=0.25          # stepsize for u-terations
 init_size = 0.3   # initial spline radius in parts per image-size
 
 
+
+
+# XXX: Bitte jeweils einkommentieren
+
 # Some Converges stable, but a bit shaky with 100x100 px
 image_path = './sample_images/artificial/100/rect_1.png'      # approx 500 steps         # XXX show
 image_path = './sample_images/artificial/100/snail1.png'      # approx 5000 steps        # XXX show
+# image_path = './sample_images/artificial/300/roundish2_300.png'
+
+
 
 
 # Some not (depending a lot on parameters): Compare Fig 2.4, 2.5
-image_path = './sample_images/artificial/200/snail200.png'
-n_points, u_iter = 100, 1
-init_size = 0.3 # --> not nice
-init_size = 0.4 # --> takes long/ gets stuck
-init_size = 0.1 # --> better? (slow, goes half the way until 7000 steps)
-n_points = 200  # --> now loops, this is like a worst case image
+# image_path = './sample_images/artificial/200/snail200.png'
+# n_points, u_iter = 100, 1
+# init_size = 0.3 # --> not nice
+# init_size = 0.4 # --> takes long/ gets stuck
+# init_size = 0.1 # --> better? (slow, goes half the way until 7000 steps)
+# n_points = 200  # --> now loops, this is like a worst case image
+
+
 
 
 
 
 ## Examples 2: Real Images:
-lambd, v= 7, 0.1  # blur-factor, factor for spline lengths punishment
-n_points = 50     # number of controllpoints for spline
-alph=0.2          # learning rate 
-u_iter=2          # u-function iterations per snake-step 
-tau=0.25          # stepsize for u-terations
-init_size = 0.3   # initial spline sioze in parts per image-size
+# lambd, v= 7, 0.1  # blur-factor, factor for spline lengths punishment
+# n_points = 50     # number of controllpoints for spline
+# alph=0.2          # learning rate 
+# u_iter=2          # u-function iterations per snake-step 
+# tau=0.25          # stepsize for u-terations
+# init_size = 0.3   # initial spline sioze in parts per image-size
 
 
 image_path = './sample_images/real/100/switch_1.png'          # simple working good   # XXX show
 # image_path = './sample_images/real/300/switch_1.png'          # ... but bigger get slower 
 # image_path = './sample_images/real/600/switch_1.png'          # ... and slower
 # image_path = './sample_images/real/1200/switch_1.png'         # ... and slower
+
 
 
 
@@ -65,12 +75,21 @@ image_path = './sample_images/real/100/switch_1.png'          # simple working g
 
 
 
-# image_path = './sample_images/real/300/bee.png'             # approx 2000 steps       # XXX show
+
+
+# image_path = './sample_images/real/100/bee.png'             # approx 2000 steps       # XXX show
 # u_iter=12
 # lambd, v= 15, 0.01  
-# n_points = 100 
-# alph=0.9
+# n_points = 30 
+# alph=0.5
 # init_size = 0.2      
+
+# image_path = './sample_images/real/300/bee.png'             # approx 2000 steps
+# n_points = 50 
+# alph=0.9   
+
+
+
 
 
 
@@ -92,7 +111,7 @@ print_step = plt.text(.05, .99, "Step: 0", ha='left', va='top')
 Cplt,=plt.plot(x,y,"-b", label='Spline')
 
 plt.subplot(1,2,2)
-fplt=plt.imshow(f.T, cmap='grey', vmin=0, vmax=1)
+fplt=plt.imshow(f.T, cmap='gray', vmin=0, vmax=1)
 C2plt,=plt.plot(x,y,"-b", label='Spline')
 axes[0].set_title('u-function')
 axes[1].set_title('Input Image')

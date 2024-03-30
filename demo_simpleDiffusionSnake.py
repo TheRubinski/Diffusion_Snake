@@ -15,21 +15,25 @@ init_size = 0.3     # initial spline radius in parts per image-size
 
 
 
+# XXX: Bitte jeweils einkommentieren
 
+# image_path = './sample_images/artificial/100/snail1_gray.png'       # also on gray examples     
+# image_path = './sample_images/artificial/400/snail400.png'          # same for bigger ones
+image_path = './sample_images/artificial/100/labyrinth_1.png'     # also good on more complex shape           #  XXX: Show 
 
-image_path = './sample_images/artificial/100/snail1_gray.png'       # also on gray examples     
-# image_path = './sample_images/artificial/100/labyrinth_1.png'       # also good on more complex shape           #  XXX: Show -> not so nice with init_size=0.4
-image_path = './sample_images/artificial/400/snail400.png'          # same for bigger ones
 
 
 
 ## Examples 2: Real Images - simliar to Cremers
 
-# init_size = 0.2 # else slow in the beginning
+# XXX: Parameter einkommentieren
+init_size = 0.2 # else slow in the beginning
+v=0.1
 
 # image_path= './sample_images/real/300/bee.png'                        # also very good, a little slow in the beginning (300 x 300)                        # XXX: Show
-# image_path,n_points = './sample_images/real/300/hand_1.png',400       # hard one, still ok, good in the beginning, deutlich schlechter mit 100  points    # XXX: Show
-# image_path,n_points= './sample_images/real/300/hand_2.png',400        # hardest one. Finds darkest area in image, but not only the hand                   # XXX: Show
+image_path,n_points = './sample_images/real/300/hand_1.png',400       # hard one, still ok, good in the beginning, deutlich schlechter mit 100  points    # XXX: Show
+image_path,n_points= './sample_images/real/300/hand_2.png',400        # hardest one. Finds darkest area in image, but not only the hand                   # XXX: Show
+
 # image_path= './sample_images/real/900/hand_1.png'                     # big one also working
 # image_path= './sample_images/real/1200/switch_1.png'                  # very slow on big images (1800 steps here for 1200 x 1200 pixels)
 
@@ -52,7 +56,7 @@ print_step = plt.text(.05, .99, "Step: 0", ha='left', va='top')
 Cplt,=plt.plot(x,y,"-b", label='Spline')
 
 plt.subplot(1,2,2)
-fplt=plt.imshow(f.T, cmap='grey', vmin=0, vmax=1)
+fplt=plt.imshow(f.T, cmap='gray', vmin=0, vmax=1)
 C2plt,=plt.plot(x,y,"-b", label='Spline')
 axes[0].set_title('u-function')
 axes[1].set_title('Input Image')

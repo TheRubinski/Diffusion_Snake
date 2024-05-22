@@ -7,4 +7,6 @@ A white-box segmentation approach using gradient descent on a Mumford-Sha functi
 There is a simplified and a full version of the functional. We did implement both. See the demo files. We have also added a respacing for the spline control points to speed up convergence.
 The hardest part was getting through the math, as the paper is quite old and no code nor pseudo code, and the explanation of the formulars is quite sketchy in places.
 
+- 👀 As next project, idea was to fuse this and another white box approach into the segmentation NCAs that I worked on in my thesis.
+
 https://github.com/TheRubinski/Diffusion_Snake/assets/74351447/7268e7fa-195b-4dc5-baf4-dc9a2cd859bb

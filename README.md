@@ -1,4 +1,4 @@
-### Diffusion Snakes
+# Diffusion Snake, a white box edge detector
 2 People ~ 3.5 weeks
 
 Using [Creemers (2002)](https://cvg.cit.tum.de/_media/spezial/bib/cremers_dissertation.pdf)
